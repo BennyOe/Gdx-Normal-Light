@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
+import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.Vector4
 import com.badlogic.gdx.utils.GdxRuntimeException
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
@@ -37,13 +39,32 @@ class Light : KtxScreen {
 
     private val lightPos = vec3(0f, 0f, 0f)
     private var lightColor = vec4(r, g, b, lightIntensity)
-    private val ambientColor = vec4(0.6f, 0.6f, 1f, 0.1f)
+    private val ambientColor = vec4(0.6f, 0.6f, 1f, 0.04f)
     private val falloff = vec3(.4f, 3f, 20f)
     private val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     private val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")
+    private val activeLights: MutableList<LightData> = mutableListOf(
+//        LightData(lightType, lightPos,falloff, lightColor,ambientColor,falloff,coneAngleValue),
+    )
 
 
     override fun show() {
+        val screenWidth = Gdx.graphics.width.toFloat()
+        val screenHeight = Gdx.graphics.height.toFloat()
+        val spacing = screenWidth / 10f
+
+        activeLights.add(
+            LightData(
+                lightType,
+                lightPos,
+                vec3(0f, -1f, 0f),
+                lightColor,
+                ambientColor,
+                falloff,
+                coneAngleValue
+            ),
+        )
+
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
@@ -55,14 +76,23 @@ class Light : KtxScreen {
         }
 
         shader.bind()
+        shader.setUniformi("LightCount", activeLights.size)
+
         shader.setUniformi("u_normals", 1)
-        shader.setUniformi("LightType", lightType.ordinal)
-        shader.setUniformf("LightColor", lightColor)
-        shader.setUniformf("AmbientColor", ambientColor)
-        shader.setUniformf("Falloff", falloff)
         coneAngleValue = cos(toRadians(20.0)).toFloat()
-        shader.setUniformf("ConeAngle", coneAngleValue)
         shader.setUniformf("normalInfluence", 1.0f)
+
+        for (i in activeLights.indices) {
+            val light = activeLights[i]
+            val prefix = "[$i]"
+            shader.setUniformi("LightType$prefix", light.type.ordinal)
+            shader.setUniformf("LightPos$prefix", light.position)
+            shader.setUniformf("LightDir$prefix", light.direction)
+            shader.setUniformf("LightColor$prefix", light.color)
+            shader.setUniformf("AmbientColor$prefix", light.ambient)
+            shader.setUniformf("Falloff$prefix", light.falloff)
+            shader.setUniformf("ConeAngle$prefix", light.coneAngle)
+        }
 
         batch = SpriteBatch(1000, shader)
         batch.shader = shader
@@ -146,10 +176,10 @@ class Light : KtxScreen {
             lightType = LightType.DIRECTIONAL
         }
         if (Gdx.input.isKeyPressed((Input.Keys.NUM_2))) {
-            lightType = LightType.SPOT
+            lightType = LightType.POINT
         }
         if (Gdx.input.isKeyPressed((Input.Keys.NUM_3))) {
-            lightType = LightType.CONE
+            lightType = LightType.SPOT
         }
         shader.setUniformi("LightType", lightType.ordinal)
     }
@@ -163,5 +193,15 @@ class Light : KtxScreen {
 }
 
 enum class LightType {
-    DIRECTIONAL, SPOT, CONE
+    DIRECTIONAL, POINT, SPOT
 }
+
+data class LightData(
+    val type: LightType,
+    val position: Vector3,
+    val direction: Vector3,
+    val color: Vector4,
+    val ambient: Vector4,
+    val falloff: Vector3,
+    val coneAngle: Float
+)

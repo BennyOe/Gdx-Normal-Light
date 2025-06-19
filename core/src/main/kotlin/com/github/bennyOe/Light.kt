@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
@@ -21,7 +22,12 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.badlogic.gdx.physics.box2d.World
+import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.GdxRuntimeException
+import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
 import ktx.graphics.use
@@ -36,8 +42,13 @@ import kotlin.math.cos
 const val PPM = 100f
 
 class Light : KtxScreen {
-    private lateinit var batch: SpriteBatch
+    //-------Scene2d------//
     private lateinit var cam: OrthographicCamera
+    private lateinit var viewport: ExtendViewport
+    private lateinit var stage: Stage
+
+
+    private lateinit var batch: SpriteBatch
     private lateinit var wall: Texture
     private lateinit var wallNormals: Texture
     private lateinit var shader: ShaderProgram
@@ -67,19 +78,25 @@ class Light : KtxScreen {
 
 
     override fun show() {
-        rayHandler.setShadows(true)
+        cam = OrthographicCamera(Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
+
         rayHandler.setAmbientLight(0f, 0f, 0f, 0.5f)
         rayHandler.setBlurNum(3)
-        createWallBody(world, vec2(-4f, -2.5f), 0.4f)
-        createWallBody(world, vec2(-2.8f, 1.2f), 0.3f)
-        createWallBody(world, vec2(-1.6f, -1.3f), 0.7f)
-        createWallBody(world, vec2(0f, 0f), 0.6f)
-        createWallBody(world, vec2(1.2f, -1.0f), 0.2f)
-        createWallBody(world, vec2(2.2f, 1.3f), 0.5f)
-        createWallBody(world, vec2(2.8f, -0.3f), 0.3f)
-        createWallBody(world, vec2(3.2f, 1.8f), 0.7f)
-        createWallBody(world, vec2(-3.0f, 1.9f), 0.6f)
-        createWallBody(world, vec2(-2.2f, -1.9f), 0.4f)
+        RayHandler.useDiffuseLight(false)
+        // Erzeuge nicht-überlappende, verteilte Wände
+        val wallPositions = listOf(
+            vec2(-4f, -2.5f) to 0.2f,
+            vec2(-3.0f, 2.0f) to 0.15f,
+            vec2(-1.5f, 1.5f) to 0.18f,
+            vec2(0.0f, -1.5f) to 0.13f,
+            vec2(1.5f, 2.0f) to 0.17f,
+            vec2(3.0f, -2.0f) to 0.14f,
+            vec2(2.5f, 0.5f) to 0.12f,
+            vec2(-2.0f, 0.0f) to 0.16f
+        )
+        for ((pos, size) in wallPositions) {
+            createWallBody(world, pos, size)
+        }
 
         // ---- END BOX2d LIGHTS-------//
         activeLights.add(
@@ -94,13 +111,6 @@ class Light : KtxScreen {
             ),
         )
 
-        setupShader()
-
-        batch = SpriteBatch(1000, shader)
-
-        cam = OrthographicCamera(Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
-        val centerX = cam.position.x
-        val centerY = cam.position.y
         pointLight = ConeLight(
             rayHandler,
             128,
@@ -111,14 +121,28 @@ class Light : KtxScreen {
             240f,
             40f
         )
+        setupShader()
+        batch = SpriteBatch(1000, shader)
 
+        viewport = ExtendViewport(19f, 9f)
+        stage = Stage(ScreenViewport(), SpriteBatch())
         handleInputs()
+        stage.addActor(object : Actor() {
+            override fun act(delta: Float) {
+                super.act(delta)
+                keyboardInput()
+            }
+        })
+        val label = Label("Scene2D working", Label.LabelStyle(BitmapFont(), Color.WHITE))
+        label.setPosition(20f, 20f)
+        stage.addActor(label)
     }
 
     override fun resize(width: Int, height: Int) {
         shader.bind()
         shader.setUniformf("Resolution", width.toFloat(), height.toFloat())
         rayHandler.setCombinedMatrix(cam)
+        stage.viewport.update(width, height)
     }
 
     override fun render(delta: Float) {
@@ -143,13 +167,14 @@ class Light : KtxScreen {
             val lightDir = vec3(-1f, -1f, 0f)
             shader.setUniformf("LightDir", lightDir)
 
-            keyboardInput()
-
             wallNormals.bind(1)
             wall.bind(0)
 
             batch.draw(wall, 0f, 0f)
         }
+        //--------Scene2d------//
+        stage.act(delta)
+        stage.draw()
         //------ Box 2d lights ------//
         debugRenderer.render(world, cam.combined)
         pointLight.position = vec2(mouseWorld.x, mouseWorld.y)
@@ -157,6 +182,7 @@ class Light : KtxScreen {
         rayHandler.setShadows(true)
         rayHandler.setCombinedMatrix(cam)
         rayHandler.updateAndRender()
+
     }
 
     private fun handleInputs() {

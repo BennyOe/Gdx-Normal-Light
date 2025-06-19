@@ -1,7 +1,6 @@
 package com.github.bennyOe
 
 import box2dLight.ConeLight
-import box2dLight.PointLight
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
@@ -13,6 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.Vector4
 import com.badlogic.gdx.physics.box2d.Body
@@ -70,7 +70,16 @@ class Light : KtxScreen {
         rayHandler.setShadows(true)
         rayHandler.setAmbientLight(0f, 0f, 0f, 0.5f)
         rayHandler.setBlurNum(3)
-        createWallBody(world)
+        createWallBody(world, vec2(-4f, -2.5f), 0.4f)
+        createWallBody(world, vec2(-2.8f, 1.2f), 0.3f)
+        createWallBody(world, vec2(-1.6f, -1.3f), 0.7f)
+        createWallBody(world, vec2(0f, 0f), 0.6f)
+        createWallBody(world, vec2(1.2f, -1.0f), 0.2f)
+        createWallBody(world, vec2(2.2f, 1.3f), 0.5f)
+        createWallBody(world, vec2(2.8f, -0.3f), 0.3f)
+        createWallBody(world, vec2(3.2f, 1.8f), 0.7f)
+        createWallBody(world, vec2(-3.0f, 1.9f), 0.6f)
+        createWallBody(world, vec2(-2.2f, -1.9f), 0.4f)
 
         // ---- END BOX2d LIGHTS-------//
         activeLights.add(
@@ -85,6 +94,82 @@ class Light : KtxScreen {
             ),
         )
 
+        setupShader()
+
+        batch = SpriteBatch(1000, shader)
+
+        cam = OrthographicCamera(Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
+        val centerX = cam.position.x
+        val centerY = cam.position.y
+        pointLight = ConeLight(
+            rayHandler,
+            128,
+            Color(lightColor.x, lightColor.y, lightColor.z, lightColor.w),
+            5f,
+            lightPos.x,
+            lightPos.y,
+            240f,
+            40f
+        )
+
+        handleInputs()
+    }
+
+    override fun resize(width: Int, height: Int) {
+        shader.bind()
+        shader.setUniformf("Resolution", width.toFloat(), height.toFloat())
+        rayHandler.setCombinedMatrix(cam)
+    }
+
+    override fun render(delta: Float) {
+        world.step(1 / 60f, 6, 2)
+        println(Gdx.graphics.framesPerSecond)
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
+        val mouseScreen = vec3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
+        val mouseWorld = cam.unproject(mouseScreen)
+
+        // this is needed to convert to normal position [0..1] for shader "gl_fragCoord.xy"
+        val lightScreen = vec3(
+            Gdx.input.x.toFloat() / Gdx.graphics.width,
+            1f - Gdx.input.y.toFloat() / Gdx.graphics.height,
+            0f
+        )
+        batch.use {
+
+            lightPos.set(lightScreen)
+            shader.setUniformf("LightPos", lightPos)
+
+            val lightDir = vec3(-1f, -1f, 0f)
+            shader.setUniformf("LightDir", lightDir)
+
+            keyboardInput()
+
+            wallNormals.bind(1)
+            wall.bind(0)
+
+            batch.draw(wall, 0f, 0f)
+        }
+        //------ Box 2d lights ------//
+        debugRenderer.render(world, cam.combined)
+        pointLight.position = vec2(mouseWorld.x, mouseWorld.y)
+        pointLight.color = Color(lightColor.x, lightColor.y, lightColor.z, lightColor.w)
+        rayHandler.setShadows(true)
+        rayHandler.setCombinedMatrix(cam)
+        rayHandler.updateAndRender()
+    }
+
+    private fun handleInputs() {
+        Gdx.input.inputProcessor = object : InputAdapter() {
+            override fun scrolled(amountX: Float, amountY: Float): Boolean {
+                val angleDeg = toDegrees(acos(coneAngleValue.toDouble())) + amountY
+                coneAngleValue = cos(toRadians(angleDeg.coerceIn(1.0, 89.0))).toFloat()
+                return true
+            }
+        }
+    }
+
+    private fun setupShader() {
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
@@ -113,70 +198,8 @@ class Light : KtxScreen {
             shader.setUniformf("Falloff$prefix", light.falloff)
             shader.setUniformf("ConeAngle$prefix", light.coneAngle)
         }
-
-        batch = SpriteBatch(1000)
-        batch.shader = null
-
-        cam = OrthographicCamera( Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
-        val centerX = cam.position.x
-        val centerY = cam.position.y
-        pointLight = ConeLight(rayHandler, 128, Color(1f, 1f, 1f, 1f), 8f, centerX +2f , centerY +3f, 240f, 40f)
-
-        Gdx.input.inputProcessor = object : InputAdapter() {
-            override fun scrolled(amountX: Float, amountY: Float): Boolean {
-                val angleDeg = toDegrees(acos(coneAngleValue.toDouble())) + amountY
-                coneAngleValue = cos(toRadians(angleDeg.coerceIn(1.0, 89.0))).toFloat()
-                return true
-            }
-        }
     }
 
-    override fun resize(width: Int, height: Int) {
-        cam.setToOrtho(false, width / PPM, height / PPM)
-
-        // ZENTRIEREN auf Weltmitte!
-        cam.position.set(
-            0f,
-            0f,
-            0f
-        )
-
-        cam.update()
-        batch.projectionMatrix = cam.combined
-        shader.bind()
-        shader.setUniformf("Resolution", width.toFloat(), height.toFloat())
-        rayHandler.setCombinedMatrix(cam)
-    }
-
-    override fun render(delta: Float) {
-        world.step(1/60f, 6, 2)
-        println(Gdx.graphics.framesPerSecond)
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-//        batch.use {
-//            val x = Gdx.input.x.toFloat() / Gdx.graphics.width
-//            val y = 1f - Gdx.input.y.toFloat() / Gdx.graphics.height
-//
-//            lightPos.set(x, y, 0f)
-//            shader.setUniformf("LightPos", lightPos)
-//
-//            val lightDir = vec3(-1f, -1f, 0f)
-//            shader.setUniformf("LightDir", lightDir)
-//
-//            keyboardInput()
-//
-//            wallNormals.bind(1)
-//            wall.bind(0)
-//
-//            batch.draw(wall, 0f, 0f)
-//        }
-        //------ Box 2d lights ------//
-        cam.update()
-        debugRenderer.render(world, cam.combined)
-        rayHandler.setShadows(true)
-        rayHandler.setCombinedMatrix(cam)
-        rayHandler.updateAndRender()
-    }
 
     private fun keyboardInput() {
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
@@ -231,16 +254,16 @@ class Light : KtxScreen {
         shader.disposeSafely()
     }
 
-    fun createWallBody(world: World) {
+    fun createWallBody(world: World, position: Vector2, size: Float) {
         val bodyDef = BodyDef().apply {
             type = BodyDef.BodyType.StaticBody
-            position.set(0f, 0f) // sichtbar im Zentrum
+            position.set(position) // sichtbar im Zentrum
         }
 
         wallBody = world.createBody(bodyDef)
 
         val shape = PolygonShape().apply {
-            setAsBox(1f, 1f, vec2(0f, 0f), 0f) // große Fläche = sichtbar, zentriert
+            setAsBox(size, size, position, 0f) // große Fläche = sichtbar, zentriert
         }
 
         val fixtureDef = FixtureDef().apply {

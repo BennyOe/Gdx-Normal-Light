@@ -60,10 +60,10 @@ void main() {
                 attenuation = 1.0 / (falloff[i].x + (falloff[i].y * d) + (falloff[i].z * d * d));
             } else if (lightType[i] == 2) {
                 // Spot light
-                float theta = dot(normalize(lightDir[i]), -l); // Calculate the angle between the light direction and the vector to the fragment
-                float epsilon = 0.2; // Small value to avoid division by zero
-                spotFactor = smoothstep(coneAngle[i] - epsilon, coneAngle[i], theta); // Calculate the spot factor based on the angle
-                attenuation = spotFactor / (falloff[i].x + (falloff[i].y * d) + (falloff[i].z * d * d)); // Calculate the attenuation based on the distance and falloff factors
+                float cutoff = cos(radians(coneAngle[i]));
+                float epsilon = 0.05;
+                float theta = dot(normalize(lightDir[i]), -l); // l = Richtung zum Fragment
+                spotFactor = smoothstep(cutoff - epsilon, cutoff, theta);
             }
         }
 

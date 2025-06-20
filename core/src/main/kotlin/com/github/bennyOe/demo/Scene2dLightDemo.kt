@@ -18,10 +18,6 @@ import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.viewport.ExtendViewport
-import com.badlogic.gdx.utils.viewport.FillViewport
-import com.badlogic.gdx.utils.viewport.FitViewport
-import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
@@ -64,14 +60,14 @@ class Scene2dLightDemo : KtxScreen {
 
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
 
-        val spotlight = lightEngine.addLight(
-            type = LightType.SPOT,
-            position = vec2(9.5f, 4.5f),
-            color = Color(1f, 0.7f, 0.1f, 1f),
-            spotAngle = 50f,
-            direction = 90f,
-            intensity = 8f,
-        )
+//        val spotlight = lightEngine.addLight(
+//            type = LightType.SPOT,
+//            position = vec2(9.5f, 4.5f),
+//            color = Color(1f, 0.7f, 0.1f, 1f),
+//            spotAngle = 50f,
+//            direction = 0f,
+//            intensity = 14f,
+//        )
 
 //        lightEngine.addLight(
 //            type = LightType.DIRECTIONAL,
@@ -83,20 +79,22 @@ class Scene2dLightDemo : KtxScreen {
 
         val light = lightEngine.addLight(
             LightType.POINT,
-            Vector2(9.5f, 5f),
+            Vector2(-9.5f, 5f),
             Color.RED,
             0f,
-            8f
-        )
-        val light1 = lightEngine.addLight(
-            LightType.POINT,
-            vec2(0f, 0f),
-            Color(1f, 0f, 1f, 1f),
-            0f,
-            9f,
+            8f,
+            vec3(2f,2f,2f)
         )
 
-        actor = LightActor(spotlight)
+//        val light1 = lightEngine.addLight(
+//            LightType.POINT,
+//            vec2(0f, 0f),
+//            Color(1f, 0f, 1f, 1f),
+//            0f,
+//            2f,
+//        )
+
+        actor = LightActor(light)
         stage.addActor(actor)
 
         createWalls()

@@ -13,15 +13,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.GdxRuntimeException
-import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.utils.degreesToLightDir
-import com.github.bennyOe.core.utils.worldToScreen01
-import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.assets.disposeSafely
-import ktx.graphics.use
 import ktx.math.vec3
 import ktx.math.vec4
 import java.lang.Math.toRadians
@@ -135,8 +130,8 @@ class LightEngine(
         batch.end()
         batch.shader = null
 
-        rayHandler.setCombinedMatrix(cam)
-        rayHandler.updateAndRender()
+//        rayHandler.setCombinedMatrix(cam)
+//        rayHandler.updateAndRender()
     }
 
     fun resize(width: Int, height: Int) {
@@ -178,7 +173,6 @@ class LightEngine(
             val screen = cam.project(vec3(light.position, 0f))
             val normX = (screen.x - viewport.screenX) / viewport.screenWidth
             val normY = (screen.y - viewport.screenY) / viewport.screenHeight
-            println("→ screen: ${screen.x}, ${screen.y} → norm: $normX, $normY")
             shader.setUniformf("lightPos[$i]", normX, normY)
             shader.setUniformf("lightDir$prefix", light.direction)
 

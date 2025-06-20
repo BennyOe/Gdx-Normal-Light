@@ -7,9 +7,9 @@ import com.badlogic.gdx.math.Vector3
 interface ShaderLight {
     val position: Vector2
     val color: Color
-    val direction: Vector2
-    val falloff: Vector3
     val intensity: Float
+    val direction: Vector3
+    val falloff: Vector3
     val type: LightType
     val spotAngle: Float
 

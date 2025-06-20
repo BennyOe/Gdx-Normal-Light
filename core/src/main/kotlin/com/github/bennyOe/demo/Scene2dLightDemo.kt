@@ -5,35 +5,44 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.badlogic.gdx.physics.box2d.World
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
+import com.github.bennyOe.scene2d.LightActor
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
 import ktx.math.vec2
 import ktx.math.vec3
 
-const val PPM = 100f
 
-class LightDemo : KtxScreen {
-    private val world = World(vec2(0f, -9.81f), true)
+class Scene2dLightDemo : KtxScreen {
+    //-------Scene2d------//
     private lateinit var cam: OrthographicCamera
     private lateinit var viewport: ExtendViewport
+    private lateinit var stage: Stage
     private lateinit var lightEngine: LightEngine
+    private lateinit var actor: LightActor
+
+
     private lateinit var batch: SpriteBatch
-
-
     private lateinit var wall: Texture
     private lateinit var wallNormals: Texture
 
+    // --------- Box 2d lights --------//
+    private val world = World(vec2(0f, -9.81f), true)
     private val rayHandler = RayHandler(world)
     private lateinit var wallBody: Body
     private val debugRenderer = Box2DDebugRenderer()
@@ -44,18 +53,36 @@ class LightDemo : KtxScreen {
         rayHandler.setBlurNum(3)
         RayHandler.useDiffuseLight(false)
         batch = SpriteBatch()
-        viewport = ExtendViewport(19f, 9f, cam)
+        viewport = ExtendViewport(19f, 9f)
+        stage = Stage(ScreenViewport(), SpriteBatch())
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
         lightEngine = LightEngine(rayHandler, cam, batch)
-        createLights()
+
+        val light = lightEngine.addLight(
+            LightType.SPOT,
+            vec2(0f, 0f),
+            Color(1f, 0f, 1f, 1f),
+            70f,
+            9f,
+            vec3(.4f, 3f, 20f)
+        )
+
+        actor = LightActor(light)
+        stage.addActor(actor)
 
         createWalls()
+
+
+        val label = Label("Scene2D working", Label.LabelStyle(BitmapFont(), Color.WHITE))
+        label.setPosition(20f, 20f)
+        stage.addActor(label)
     }
 
     override fun resize(width: Int, height: Int) {
         lightEngine.resize(width, height)
+        stage.viewport.update(width, height)
     }
 
     override fun render(delta: Float) {
@@ -63,12 +90,17 @@ class LightDemo : KtxScreen {
         println(Gdx.graphics.framesPerSecond)
 
         lightEngine.update()
-
         lightEngine.renderLights {
             wallNormals.bind(1)
             wall.bind(0)
             batch.draw(wall, 0f, 0f)
         }
+        val mouse = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
+        val worldPos = cam.unproject(mouse)
+        actor.setPosition(worldPos.x, worldPos.y)
+        stage.act(delta)
+        stage.draw()
+
         debugRenderer.render(world, cam.combined)
     }
 
@@ -77,27 +109,6 @@ class LightDemo : KtxScreen {
         wall.disposeSafely()
         wallNormals.disposeSafely()
         lightEngine.dispose()
-    }
-
-    private fun createLights() {
-//        lightEngine.setAmbientLight(Color(1f, 0f,0f, 0.2f))
-//        lightEngine.addLight(LightType.DIRECTIONAL, vec2(1f, 1f), Color(1f, 1f, 1f, 0.5f), 70f)
-//        lightEngine.addLight(
-//            LightType.POINT,
-//            vec2(-1f, -3f),
-//            Color(1f, 0f, 1f, 1f),
-//            70f,
-//            3f,
-//            vec3(.4f, 3f, 20f)
-//        )
-        lightEngine.addLight(
-            LightType.SPOT,
-            vec2(0f, 0f),
-            Color(1f, 0f, 1f, 1f),
-            20f,
-            9f,
-            vec3(.4f, 3f, 20f)
-        )
     }
 
     private fun createWalls() {

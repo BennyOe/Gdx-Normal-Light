@@ -10,7 +10,8 @@ class CombinedLight(
     override var position: Vector2,
     override var color: Color,
     override var intensity: Float,
-    override var direction: Vector2,
+    override var directionAngle: Float,
+    override var direction: Vector3,
     override var falloff: Vector3,
     override var spotAngle: Float,
     private val shaderLight: ShaderLight,
@@ -24,16 +25,21 @@ class CombinedLight(
 
     private fun updateBox2dLight() {
         box2dLight.color = color
-        box2dLight.distance = intensity
+        box2dLight.distance = color.a * intensity
 
         when (box2dLight) {
             is box2dLight.PointLight -> {
                 box2dLight.setPosition(position)
             }
+
             is box2dLight.ConeLight -> {
                 box2dLight.setPosition(position)
-                box2dLight.setDirection(direction.angleDeg())
+                box2dLight.setDirection(directionAngle)
                 box2dLight.setConeDegree(spotAngle)
+            }
+
+            is box2dLight.DirectionalLight -> {
+                box2dLight.setDirection(directionAngle)
             }
             // ggf. mehr Typen
         }

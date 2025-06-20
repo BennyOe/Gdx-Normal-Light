@@ -9,7 +9,8 @@ interface GameLight {
     var position: Vector2
     var color: Color
     var intensity: Float
-    var direction: Vector2
+    var directionAngle: Float
+    var direction: Vector3
     var falloff: Vector3
     var spotAngle: Float
     fun update()

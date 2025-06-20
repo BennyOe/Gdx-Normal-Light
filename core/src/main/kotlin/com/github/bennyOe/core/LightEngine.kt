@@ -15,14 +15,16 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.GdxRuntimeException
+import com.github.bennyOe.core.utils.degreesToLightDir
+import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.assets.disposeSafely
 import ktx.graphics.use
+import ktx.math.vec4
 import java.lang.Math.toRadians
 import kotlin.math.cos
 
 class LightEngine(
     val rayHandler: RayHandler,
-    val world: World,
     val cam: OrthographicCamera,
     val batch: SpriteBatch,
     val maxShaderLights: Int = 20,
@@ -30,13 +32,14 @@ class LightEngine(
     private val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     private val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")
     private lateinit var shader: ShaderProgram
-    private var shaderAmbientLight: Color = Color(1f, 1f, 1f, 0.5f)
+    private lateinit var shaderAmbientLight: Color
     private val lights = mutableListOf<GameLight>()
     private val shaderLights get() = lights.take(maxShaderLights)
     private var normalInfluenceValue: Float = 1f
 
     init {
         setupShader()
+        setAmbientLight(Color(1f, 1f, 1f, 0f))
         batch.shader = shader
     }
 
@@ -44,26 +47,26 @@ class LightEngine(
         type: LightType,
         position: Vector2,
         color: Color,
-        intensity: Float,
-        direction: Vector2,
+        direction: Float,
+        intensity: Float = 1f,
         falloff: Vector3 = Vector3(1f, 0.1f, 0.01f),
         spotAngle: Float = 45f
-    ) {
+    ): GameLight {
 
         val shaderLight = DefaultShaderLight(
             type = type,
             position = position,
             color = color,
             intensity = intensity,
-            direction = direction,
+            direction = degreesToLightDir(direction),
             falloff = falloff,
-            spotAngle = spotAngle,
+            spotAngle = spotAngle
         )
 
         val box2dLight = when (type) {
-            LightType.POINT -> PointLight(rayHandler, 128, color, intensity, position.x, position.y)
-            LightType.SPOT -> ConeLight(rayHandler, 128, color, intensity, position.x, position.y, direction.angleDeg(), spotAngle)
-            LightType.DIRECTIONAL -> DirectionalLight(rayHandler, 128, color, direction.x)
+            LightType.POINT -> PointLight(rayHandler, 128, color, color.a * intensity, position.x, position.y)
+            LightType.SPOT -> ConeLight(rayHandler, 128, color, color.a * intensity, position.x, position.y, direction, spotAngle)
+            LightType.DIRECTIONAL -> DirectionalLight(rayHandler, 128, color, direction)
         }
 
         val combined = CombinedLight(
@@ -71,7 +74,8 @@ class LightEngine(
             position = position,
             color = color,
             intensity = intensity,
-            direction = direction,
+            directionAngle = direction,
+            direction = degreesToLightDir(direction),
             falloff = falloff,
             spotAngle = spotAngle,
             shaderLight = shaderLight,
@@ -79,6 +83,7 @@ class LightEngine(
         )
 
         lights.add(combined)
+        return combined
     }
 
     fun setNormalInfluence(normalInfluenceValue: Float) {
@@ -97,19 +102,20 @@ class LightEngine(
         shader.setUniformi("lightCount", 0)
     }
 
-    fun setAmbientLight(color: Color, intensity: Float = 1f) {
-        val ambient = color.cpy().mul(intensity)
+    fun setAmbientLight(ambient: Color) {
         rayHandler.setAmbientLight(ambient)
         shaderAmbientLight = ambient
+        shader.setUniformf("ambient", shaderAmbientLight)
     }
 
-    fun setAmbientLight(r: Float, g: Float, b: Float, a: Float = 1f) {
+    fun setAmbientLight(r: Float, g: Float, b: Float, a: Float = 0.3f) {
         val ambient = Color(r, g, b, a)
         rayHandler.setAmbientLight(ambient)
         shaderAmbientLight = ambient
+        shader.setUniformf("ambient", shaderAmbientLight)
     }
 
-    fun update(deltaTime: Float) = lights.forEach { it.update() }
+    fun update() = lights.forEach { it.update() }
 
     fun renderLights(drawScene: () -> Unit) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
@@ -117,8 +123,8 @@ class LightEngine(
         batch.use {
             drawScene()
         }
-//        rayHandler.setCombinedMatrix(cam)
-//        rayHandler.updateAndRender()
+        rayHandler.setCombinedMatrix(cam)
+        rayHandler.updateAndRender()
     }
 
     fun resize(width: Int, height: Int) {
@@ -134,18 +140,29 @@ class LightEngine(
 
     fun applyShaderUniforms() {
         val shader = batch.shader ?: return
+        shader.setUniformi("lightCount", shaderLights.size)
+        shader.setUniformf("normalInfluence", normalInfluenceValue)
+        shader.setUniformf("ambient", shaderAmbientLight)
+
         for (i in shaderLights.indices) {
             val light = shaderLights[i]
             val prefix = "[$i]"
             shader.setUniformi("lightType$prefix", light.type.ordinal)
-            shader.setUniformf("lightPos$prefix", light.position)
+            val pos = worldToScreenSpace(light.position, cam)
+            shader.setUniformf("lightPos[$i]", pos)
+            println("ShaderLightPos: $pos")
             shader.setUniformf("lightDir$prefix", light.direction)
-            shader.setUniformf("lightColor$prefix", light.color)
+            shader.setUniformf(
+                "lightColor$prefix", vec4(
+                    light.color.r,
+                    light.color.g,
+                    light.color.b,
+                    light.color.a * light.intensity
+                )
+            )
             shader.setUniformf("falloff$prefix", light.falloff)
             shader.setUniformf("coneAngle$prefix", cos(toRadians(light.spotAngle.toDouble())).toFloat())
             shader.setUniformi("lightType$prefix", light.type.ordinal)
-            shader.setUniformf("normalInfluence", normalInfluenceValue)
-            shader.setUniformf("ambient", shaderAmbientLight)
         }
     }
 
@@ -158,9 +175,6 @@ class LightEngine(
         }
 
         shader.bind()
-        shader.setUniformi("lightCount", maxShaderLights)
         shader.setUniformi("u_normals", 1)
-        shader.setUniformf("normalInfluence", normalInfluenceValue)
-        shader.setUniformf("ambient", shaderAmbientLight)
     }
 }

@@ -15,10 +15,14 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.GdxRuntimeException
+import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.utils.degreesToLightDir
+import com.github.bennyOe.core.utils.worldToScreen01
 import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.assets.disposeSafely
 import ktx.graphics.use
+import ktx.math.vec3
 import ktx.math.vec4
 import java.lang.Math.toRadians
 import kotlin.math.cos
@@ -27,6 +31,7 @@ class LightEngine(
     val rayHandler: RayHandler,
     val cam: OrthographicCamera,
     val batch: SpriteBatch,
+    val viewport: Viewport,
     val maxShaderLights: Int = 20,
 ) {
     private val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
@@ -118,16 +123,24 @@ class LightEngine(
     fun update() = lights.forEach { it.update() }
 
     fun renderLights(drawScene: () -> Unit) {
+        viewport.apply()
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
+        batch.shader = shader
+        batch.begin()
+
         applyShaderUniforms()
-        batch.use {
-            drawScene()
-        }
+        drawScene()
+
+        batch.end()
+        batch.shader = null
+
         rayHandler.setCombinedMatrix(cam)
         rayHandler.updateAndRender()
     }
 
     fun resize(width: Int, height: Int) {
+        viewport.update(width, height, true)
         rayHandler.setCombinedMatrix(cam)
         shader.bind()
         shader.setUniformf("resolution", width.toFloat(), height.toFloat())
@@ -140,18 +153,35 @@ class LightEngine(
 
     fun applyShaderUniforms() {
         val shader = batch.shader ?: return
+        shader.bind()
         shader.setUniformi("lightCount", shaderLights.size)
         shader.setUniformf("normalInfluence", normalInfluenceValue)
         shader.setUniformf("ambient", shaderAmbientLight)
+
+        // set the physical framebuffersize to shader
+        val fbW = Gdx.graphics.backBufferWidth.toFloat()
+        val fbH = Gdx.graphics.backBufferHeight.toFloat()
+        shader.setUniformf("resolution", fbW, fbH)
+
+        val screenX = viewport.screenX.toFloat()
+        val screenY = viewport.screenY.toFloat()
+        val screenW = viewport.screenWidth.toFloat()
+        val screenH = viewport.screenHeight.toFloat()
+
+        shader.setUniformf("u_viewportOffset", screenX, screenY)
+        shader.setUniformf("u_viewportSize", screenW, screenH)
 
         for (i in shaderLights.indices) {
             val light = shaderLights[i]
             val prefix = "[$i]"
             shader.setUniformi("lightType$prefix", light.type.ordinal)
-            val pos = worldToScreenSpace(light.position, cam)
-            shader.setUniformf("lightPos[$i]", pos)
-            println("ShaderLightPos: $pos")
+            val screen = cam.project(vec3(light.position, 0f))
+            val normX = (screen.x - viewport.screenX) / viewport.screenWidth
+            val normY = (screen.y - viewport.screenY) / viewport.screenHeight
+            println("→ screen: ${screen.x}, ${screen.y} → norm: $normX, $normY")
+            shader.setUniformf("lightPos[$i]", normX, normY)
             shader.setUniformf("lightDir$prefix", light.direction)
+
             shader.setUniformf(
                 "lightColor$prefix", vec4(
                     light.color.r,

@@ -19,6 +19,9 @@ uniform vec4 ambient;
 
 uniform int lightCount;
 
+uniform vec2 u_viewportOffset; // = (screenX, screenY)
+uniform vec2 u_viewportSize;   // = (screenWidth, screenHeight)
+
 uniform int lightType[MAX_LIGHTS];
 uniform vec3 lightPos[MAX_LIGHTS];
 uniform vec3 lightDir[MAX_LIGHTS];
@@ -33,7 +36,9 @@ void main() {
     vec3 ambientComponent = ambient.rgb * diffuseColor.rgb;
     vec3 totalLight = ambientComponent * ambient.a; // Initialize total light with ambient light
     vec2 screenCoord = gl_FragCoord.xy;
-    vec3 fragPos = vec3(screenCoord / resolution, 0.0);
+    vec2 vpCoord = screenCoord - u_viewportOffset;
+    vec2 normCoord = vpCoord / u_viewportSize;
+    vec3 fragPos = vec3(normCoord, 0.0);
 
     for (int i = 0; i < lightCount; i++) {
         vec3 l; // Light direction vector

@@ -18,7 +18,11 @@ import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.badlogic.gdx.utils.viewport.FillViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.StretchViewport
+import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
 import com.github.bennyOe.scene2d.LightActor
@@ -31,7 +35,7 @@ import ktx.math.vec3
 class Scene2dLightDemo : KtxScreen {
     //-------Scene2d------//
     private lateinit var cam: OrthographicCamera
-    private lateinit var viewport: ExtendViewport
+    private lateinit var viewport: Viewport
     private lateinit var stage: Stage
     private lateinit var lightEngine: LightEngine
     private lateinit var actor: LightActor
@@ -49,27 +53,50 @@ class Scene2dLightDemo : KtxScreen {
 
 
     override fun show() {
-        cam = OrthographicCamera(Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
+        cam = OrthographicCamera()
         rayHandler.setBlurNum(3)
         RayHandler.useDiffuseLight(false)
         batch = SpriteBatch()
-        viewport = ExtendViewport(19f, 9f)
-        stage = Stage(ScreenViewport(), SpriteBatch())
+        viewport = ExtendViewport(19f, 9f, cam)
+        stage = Stage(viewport, batch)
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
-        lightEngine = LightEngine(rayHandler, cam, batch)
+        lightEngine = LightEngine(rayHandler, cam, batch, viewport)
 
-        val light = lightEngine.addLight(
-            LightType.SPOT,
-            vec2(0f, 0f),
-            Color(1f, 0f, 1f, 1f),
-            70f,
-            9f,
-            vec3(.4f, 3f, 20f)
+        val spotlight = lightEngine.addLight(
+            type = LightType.SPOT,
+            position = vec2(9.5f, 4.5f),
+            color = Color(1f, 0.7f, 0.1f, 1f),
+            spotAngle = 50f,
+            direction = 90f,
+            intensity = 8f,
         )
 
-        actor = LightActor(light)
+//        lightEngine.addLight(
+//            type = LightType.DIRECTIONAL,
+//            color = Color(0f,1f,0f,0.4f),
+//            position = vec2(0f,0f),
+//            direction = 0f,
+//            intensity = 0.05f
+//        )
+
+        val light = lightEngine.addLight(
+            LightType.POINT,
+            Vector2(9.5f, 5f),
+            Color.RED,
+            0f,
+            8f
+        )
+        val light1 = lightEngine.addLight(
+            LightType.POINT,
+            vec2(0f, 0f),
+            Color(1f, 0f, 1f, 1f),
+            0f,
+            9f,
+        )
+
+        actor = LightActor(spotlight)
         stage.addActor(actor)
 
         createWalls()
@@ -82,23 +109,27 @@ class Scene2dLightDemo : KtxScreen {
 
     override fun resize(width: Int, height: Int) {
         lightEngine.resize(width, height)
-        stage.viewport.update(width, height)
+        viewport.update(width, height, true)
     }
 
     override fun render(delta: Float) {
         world.step(1 / 60f, 6, 2)
-        println(Gdx.graphics.framesPerSecond)
 
+        cam.update()
+        viewport.apply()
+
+        val mouse = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
+        val worldPos = viewport.unproject(mouse)
+        actor.setPosition(worldPos.x, worldPos.y)
+        stage.act(delta)
+
+        batch.projectionMatrix = cam.combined
         lightEngine.update()
         lightEngine.renderLights {
             wallNormals.bind(1)
             wall.bind(0)
-            batch.draw(wall, 0f, 0f)
+            batch.draw(wall, 0f, 0f, 19f, 9f)
         }
-        val mouse = Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f)
-        val worldPos = cam.unproject(mouse)
-        actor.setPosition(worldPos.x, worldPos.y)
-        stage.act(delta)
         stage.draw()
 
         debugRenderer.render(world, cam.combined)
@@ -112,19 +143,26 @@ class Scene2dLightDemo : KtxScreen {
     }
 
     private fun createWalls() {
-        val wallPositions = listOf(
-            vec2(-4f, -2.5f) to 0.2f,
-            vec2(-3.0f, 2.0f) to 0.15f,
-            vec2(-1.5f, 1.5f) to 0.18f,
-            vec2(0.0f, -1.5f) to 0.13f,
-            vec2(1.5f, 2.0f) to 0.17f,
-            vec2(3.0f, -2.0f) to 0.14f,
-            vec2(2.5f, 0.5f) to 0.12f,
-            vec2(-2.0f, 0.0f) to 0.16f
-        )
-        for ((pos, size) in wallPositions) {
-            createWallBody(world, pos, size)
-        }
+        // Wände am Rand der Welt
+        val wallSize = 0.5f
+
+        // Ecken
+        createWallBody(world, vec2(wallSize, wallSize), wallSize)
+        createWallBody(world, vec2(19 - wallSize, wallSize), wallSize)
+        createWallBody(world, vec2(wallSize, 9 - wallSize), wallSize)
+        createWallBody(world, vec2(19 - wallSize, 9 - wallSize), wallSize)
+
+        // Seitenmitte
+        createWallBody(world, vec2(9.5f, wallSize), wallSize)
+        createWallBody(world, vec2(9.5f, 9 - wallSize), wallSize)
+        createWallBody(world, vec2(wallSize, 4.5f), wallSize)
+        createWallBody(world, vec2(19 - wallSize, 4.5f), wallSize)
+
+        // Zusätzliche Wände in der Mitte
+        createWallBody(world, vec2(5f, 4.5f), wallSize)
+        createWallBody(world, vec2(14f, 4.5f), wallSize)
+        createWallBody(world, vec2(9.5f, 2.5f), wallSize)
+        createWallBody(world, vec2(9.5f, 6.5f), wallSize)
     }
 
     private fun createWallBody(world: World, position: Vector2, size: Float) {

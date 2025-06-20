@@ -48,7 +48,7 @@ class LightDemo : KtxScreen {
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
-        lightEngine = LightEngine(rayHandler, cam, batch)
+        lightEngine = LightEngine(rayHandler, cam, batch, viewport)
         createLights()
 
         createWalls()

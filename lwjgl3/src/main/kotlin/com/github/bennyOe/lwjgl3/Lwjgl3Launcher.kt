@@ -2,11 +2,9 @@
 
 package com.github.bennyOe.lwjgl3
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.github.bennyOe.GgdxNormalMapExample
-import org.lwjgl.opengl.GL20
 
 /** Launches the desktop (LWJGL3) application. */
 fun main() {

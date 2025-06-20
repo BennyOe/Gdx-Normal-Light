@@ -11,63 +11,62 @@ varying vec2 v_texCoord;
 uniform sampler2D u_texture;
 uniform sampler2D u_normals;
 
-uniform vec2 Resolution;
+uniform vec2 resolution;
 uniform float normalInfluence;
+uniform vec3 ambient;
 
 #define MAX_LIGHTS 8
 
-uniform int LightCount;
+uniform int lightCount;
 
-uniform int LightType[MAX_LIGHTS];
-uniform vec3 LightPos[MAX_LIGHTS];
-uniform vec3 LightDir[MAX_LIGHTS];
-uniform vec4 LightColor[MAX_LIGHTS];
-uniform vec4 AmbientColor[MAX_LIGHTS];
-uniform float ConeAngle[MAX_LIGHTS];
-uniform vec3 Falloff[MAX_LIGHTS];
+uniform int lightType[MAX_LIGHTS];
+uniform vec3 lightPos[MAX_LIGHTS];
+uniform vec3 lightDir[MAX_LIGHTS];
+uniform vec4 lightColor[MAX_LIGHTS];
+uniform float coneAngle[MAX_LIGHTS];
+uniform vec3 falloff[MAX_LIGHTS];
 
 void main() {
-    vec4 DiffuseColor = texture2D(u_texture, v_texCoord);
-    vec3 NormalMap = texture2D(u_normals, v_texCoord).rgb;
-    vec3 N = normalize(NormalMap * 2.0 - 1.0);
-    vec3 TotalLight = vec3(0.0);
-    vec2 fragPos = gl_FragCoord.xy / Resolution.xy;
+    vec4 diffuseColor = texture2D(u_texture, v_texCoord);
+    vec3 normalMap = texture2D(u_normals, v_texCoord).rgb;
+    vec3 n = normalize(normalMap * 2.0 - 1.0);
+    vec3 totalLight = ambient;
+    vec2 fragPos = gl_FragCoord.xy / resolution.xy;
 
-    for (int i = 0; i < LightCount; i++) {
-        vec2 L; // Light direction vector
-        float D = 1.0; // Distance to light source
+    for (int i = 0; i < lightCount; i++) {
+        vec2 l; // Light direction vector
+        float d = 1.0; // Distance to light source
         float attenuation = 1.0;
         float spotFactor = 1.0;
 
-        if (LightType[i] == 0) {
+        if (lightType[i] == 0) {
             // Directional light
-            L = normalize(LightDir[i].xy); // Normalize the direction vector to ensure it has a length of 1
+            l = normalize(lightDir[i].xy); // Normalize the direction vector to ensure it has a length of 1
         } else {
-            vec2 fragToLight = LightPos[i].xy - fragPos; // Calculate the vector from the fragment to the light source
-            fragToLight.x *= Resolution.x / Resolution.y; // Adjust for aspect ratio
-            D = length(fragToLight); // Calculate the distance to the light source
-            L = normalize(fragToLight); // Normalize the vector to ensure it has a length of 1
+            vec2 fragToLight = lightPos[i].xy - fragPos; // Calculate the vector from the fragment to the light source
+            fragToLight.x *= resolution.x / resolution.y; // Adjust for aspect ratio
+            d = length(fragToLight); // Calculate the distance to the light source
+            l = normalize(fragToLight); // Normalize the vector to ensure it has a length of 1
 
-            if (LightType[i] == 1) {
+            if (lightType[i] == 1) {
                 // Point light
-                attenuation = 1.0 / (Falloff[i].x + (Falloff[i].y * D) + (Falloff[i].z * D * D));
-            } else if (LightType[i] == 2) {
+                attenuation = 1.0 / (falloff[i].x + (falloff[i].y * d) + (falloff[i].z * d * d));
+            } else if (lightType[i] == 2) {
                 // Spot light
-                float theta = dot(normalize(LightDir[i].xy), -L); // Calculate the angle between the light direction and the vector to the fragment
+                float theta = dot(normalize(lightDir[i].xy), -l); // Calculate the angle between the light direction and the vector to the fragment
                 float epsilon = 0.2; // Small value to avoid division by zero
-                spotFactor = smoothstep(ConeAngle[i] - epsilon, ConeAngle[i], theta); // Calculate the spot factor based on the angle
-                attenuation = spotFactor / (Falloff[i].x + (Falloff[i].y * D) + (Falloff[i].z * D * D)); // Calculate the attenuation based on the distance and falloff factors
+                spotFactor = smoothstep(coneAngle[i] - epsilon, coneAngle[i], theta); // Calculate the spot factor based on the angle
+                attenuation = spotFactor / (falloff[i].x + (falloff[i].y * d) + (falloff[i].z * d * d)); // Calculate the attenuation based on the distance and falloff factors
             }
         }
 
-        float baseDiffuse = max(dot(N.xy, L), 0.0);
-        float diffuse = mix(1.0, baseDiffuse, normalInfluence);
-        vec3 Diffuse = (LightColor[i].rgb * LightColor[i].a) * diffuse * attenuation * spotFactor;
-        vec3 Ambient = AmbientColor[i].rgb * AmbientColor[i].a; // Ambient light contribution
+        float baseDiffuse = max(dot(n.xy, l), 0.0);
+        float diffuseMix = mix(1.0, baseDiffuse, normalInfluence);
+        vec3 diffuse = (lightColor[i].rgb * lightColor[i].a) * diffuseMix * attenuation * spotFactor;
 
-        TotalLight += Ambient + Diffuse;
+        totalLight += diffuse;
     }
 
-    vec3 FinalColor = DiffuseColor.rgb * TotalLight;
-    gl_FragColor = v_color * vec4(FinalColor, DiffuseColor.a);
+    vec3 finalColor = diffuseColor.rgb * totalLight;
+    gl_FragColor = v_color * vec4(finalColor, diffuseColor.a);
 }

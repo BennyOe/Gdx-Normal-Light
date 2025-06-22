@@ -135,10 +135,11 @@ class LightEngine(
     }
 
     fun resize(width: Int, height: Int) {
+        val scale = Gdx.graphics.backBufferScale
         viewport.update(width, height, true)
         rayHandler.setCombinedMatrix(cam)
         shader.bind()
-        shader.setUniformf("resolution", width.toFloat(), height.toFloat())
+        shader.setUniformf("resolution", width.toFloat() * scale, height.toFloat() * scale)
     }
 
     fun dispose() {
@@ -153,11 +154,6 @@ class LightEngine(
         shader.setUniformf("normalInfluence", normalInfluenceValue)
         shader.setUniformf("ambient", shaderAmbientLight)
 
-        // set the physical framebuffersize to shader
-        val fbW = Gdx.graphics.backBufferWidth.toFloat()
-        val fbH = Gdx.graphics.backBufferHeight.toFloat()
-        shader.setUniformf("resolution", fbW, fbH)
-
         val screenX = viewport.screenX.toFloat()
         val screenY = viewport.screenY.toFloat()
         val screenW = viewport.screenWidth.toFloat()
@@ -170,10 +166,17 @@ class LightEngine(
             val light = shaderLights[i]
             val prefix = "[$i]"
             shader.setUniformi("lightType$prefix", light.type.ordinal)
-            val screen = cam.project(vec3(light.position, 0f))
-            val normX = (screen.x - viewport.screenX) / viewport.screenWidth
-            val normY = (screen.y - viewport.screenY) / viewport.screenHeight
-            shader.setUniformf("lightPos[$i]", normX, normY)
+//            val screen = cam.project(vec3(light.position, 0f))
+//            val normX = (screen.x - viewport.screenX) / viewport.screenWidth
+//            val normY = (screen.y - viewport.screenY) / viewport.screenHeight
+            shader.setUniformf(
+                "lightPos[$i]",
+                vec3(
+                    Gdx.input.x.toFloat() / Gdx.graphics.width.toFloat(),
+                    1f - Gdx.input.y.toFloat() / Gdx.graphics.height.toFloat(),
+                    0f
+                )
+            )
             shader.setUniformf("lightDir$prefix", light.direction)
 
             shader.setUniformf(

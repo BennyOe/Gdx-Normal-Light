@@ -18,6 +18,7 @@ import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
@@ -53,7 +54,7 @@ class Scene2dLightDemo : KtxScreen {
         rayHandler.setBlurNum(3)
         RayHandler.useDiffuseLight(false)
         batch = SpriteBatch()
-        viewport = ExtendViewport(19f, 9f, cam)
+        viewport = FitViewport(19f, 9f, cam)
         stage = Stage(viewport, batch)
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
@@ -88,7 +89,7 @@ class Scene2dLightDemo : KtxScreen {
 
 //        val light1 = lightEngine.addLight(
 //            LightType.POINT,
-//            vec2(0f, 0f),
+//            vec2(3f, 3f),
 //            Color(1f, 0f, 1f, 1f),
 //            0f,
 //            2f,

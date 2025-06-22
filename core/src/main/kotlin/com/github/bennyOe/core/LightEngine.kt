@@ -17,6 +17,8 @@ import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.utils.degreesToLightDir
 import ktx.assets.disposeSafely
+import ktx.log.logger
+import ktx.math.vec2
 import ktx.math.vec3
 import ktx.math.vec4
 import java.lang.Math.toRadians
@@ -167,8 +169,10 @@ class LightEngine(
             val prefix = "[$i]"
             shader.setUniformi("lightType$prefix", light.type.ordinal)
 //            val screen = cam.project(vec3(light.position, 0f))
-//            val normX = (screen.x - viewport.screenX) / viewport.screenWidth
-//            val normY = (screen.y - viewport.screenY) / viewport.screenHeight
+//            println("screen $screen")
+//            val input = viewport.unproject(vec2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()))
+//            val normX = input.x / viewport.screenWidth
+//            val normY = input.y / viewport.screenHeight
             shader.setUniformf(
                 "lightPos[$i]",
                 vec3(

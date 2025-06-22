@@ -16,6 +16,7 @@ import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
+import ktx.actors.stage
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
 import ktx.math.vec2

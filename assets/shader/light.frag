@@ -35,10 +35,7 @@ void main() {
     vec3 n = normalize(normalMap * 2.0 - 1.0);
     vec3 ambientComponent = ambient.rgb * diffuseColor.rgb;
     vec3 totalLight = ambientComponent * ambient.a; // Initialize total light with ambient light
-    vec2 screenCoord = gl_FragCoord.xy;
-    vec2 vpCoord = screenCoord - u_viewportOffset;
-    vec2 normCoord = vpCoord / u_viewportSize;
-    vec3 fragPos = vec3(normCoord, 0.0);
+    vec3 fragPos = gl_FragCoord.xyz /vec3(resolution.xy, 1.0);
 
     for (int i = 0; i < lightCount; i++) {
         vec3 l; // Light direction vector

@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
+import com.github.bennyOe.core.Scene2dLightEngine
 import com.github.bennyOe.scene2d.LightActor
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
@@ -34,7 +35,7 @@ class Scene2dLightDemo : KtxScreen {
     private lateinit var cam: OrthographicCamera
     private lateinit var viewport: Viewport
     private lateinit var stage: Stage
-    private lateinit var lightEngine: LightEngine
+    private lateinit var lightEngine: Scene2dLightEngine
     private lateinit var actor: LightActor
 
 
@@ -59,7 +60,7 @@ class Scene2dLightDemo : KtxScreen {
         wall = Texture("wall.png")
         wallNormals = Texture("wall_normal.png")
 
-        lightEngine = LightEngine(rayHandler, cam, batch, viewport)
+        lightEngine = Scene2dLightEngine(rayHandler, cam, batch, viewport, stage)
 
 //        val spotlight = lightEngine.addLight(
 //            type = LightType.SPOT,

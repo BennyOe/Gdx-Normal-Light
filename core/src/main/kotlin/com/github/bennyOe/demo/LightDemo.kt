@@ -16,7 +16,6 @@ import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.github.bennyOe.core.LightEngine
 import com.github.bennyOe.core.LightType
-import ktx.actors.stage
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
 import ktx.math.vec2
@@ -41,7 +40,7 @@ class LightDemo : KtxScreen {
 
 
     override fun show() {
-        cam = OrthographicCamera(Gdx.graphics.width.toFloat() / PPM, Gdx.graphics.height.toFloat() / PPM)
+        cam = OrthographicCamera(19f, 9f)
         rayHandler.setBlurNum(3)
         RayHandler.useDiffuseLight(false)
         batch = SpriteBatch()
@@ -51,7 +50,6 @@ class LightDemo : KtxScreen {
 
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
         createLights()
-
         createWalls()
     }
 
@@ -93,7 +91,7 @@ class LightDemo : KtxScreen {
 //        )
         lightEngine.addLight(
             LightType.SPOT,
-            vec2(0f, 0f),
+            vec2(4f, 4f),
             Color(1f, 0f, 1f, 1f),
             20f,
             9f,
@@ -139,5 +137,4 @@ class LightDemo : KtxScreen {
         wallBody.createFixture(fixtureDef)
         shape.dispose()
     }
-
 }

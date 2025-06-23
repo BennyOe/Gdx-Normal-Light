@@ -38,6 +38,7 @@ abstract class AbstractLightEngine(
     init {
         setupShader()
         setAmbientLight(Color(1f, 1f, 1f, 0.05f))
+        RayHandler.useDiffuseLight(true)
         batch.shader = shader
     }
 

@@ -41,7 +41,6 @@ abstract class AbstractLightDemo : KtxScreen {
     override fun show() {
         cam = OrthographicCamera()
         rayHandler.setBlurNum(3)
-        RayHandler.useDiffuseLight(true)
         batch = SpriteBatch()
         viewport = ExtendViewport(19f, 9f, cam)
         wall = Texture("wall.png")

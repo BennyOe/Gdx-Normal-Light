@@ -17,12 +17,14 @@ import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.core.utils.degreesToLightDir
 import ktx.assets.disposeSafely
+import ktx.math.vec3
 
 abstract class AbstractLightEngine(
     val rayHandler: RayHandler,
     val cam: OrthographicCamera,
     val batch: SpriteBatch,
     val viewport: Viewport,
+    val useDiffuseLight: Boolean = false,
     val maxShaderLights: Int = 20,
 ) {
     protected val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
@@ -35,7 +37,7 @@ abstract class AbstractLightEngine(
 
     init {
         setupShader()
-        setAmbientLight(Color(1f, 1f, 1f, 0f))
+        setAmbientLight(Color(1f, 1f, 1f, 0.05f))
         batch.shader = shader
     }
 
@@ -51,47 +53,99 @@ abstract class AbstractLightEngine(
         shader.setUniformi("u_normals", 1)
     }
 
-    fun addLight(
-        type: LightType,
+    fun addDirectionalLight(
+        color: Color,
+        direction: Float,
+        intensity: Float,
+        elevation: Float = 1f,
+        rays: Int = 128
+    ): GameLight {
+        val correctedDirection = -direction
+        val shaderLight = ShaderLight.Directional(
+            color = color,
+            intensity = intensity,
+            direction = correctedDirection,
+            elevation = elevation,
+        )
+        val b2dLight = DirectionalLight(
+            rayHandler,
+            rays,
+            color,
+            correctedDirection,
+        )
+
+        val gameLight = GameLight.Directional(shaderLight, b2dLight)
+
+        lights.add(gameLight)
+        return gameLight
+    }
+
+    fun addPointLight(
+        position: Vector2,
+        color: Color,
+        distance: Float = 1f,
+        rays: Int = 128,
+    ): GameLight {
+        val falloff = Falloff.fromDistance(distance).toVector3()
+
+        val shaderLight = ShaderLight.Point(
+            color = color,
+            intensity = color.a,
+            position = position,
+            falloff = falloff,
+            distance = distance,
+        )
+        val b2dLight = PointLight(
+            rayHandler,
+            rays,
+            color,
+            distance,
+            position.x,
+            position.y
+        )
+
+        val gameLight = GameLight.Point(shaderLight, b2dLight)
+
+        lights.add(gameLight)
+        return gameLight
+    }
+
+    fun addSpotLight(
         position: Vector2,
         color: Color,
         direction: Float,
-        intensity: Float = 1f,
-        falloff: Vector3 = Vector3(1f, 0.1f, 0.01f),
-        spotAngle: Float = 45f
+        coneDegree: Float,
+        distance: Float = 1f,
+        rays: Int = 128,
     ): GameLight {
+        val falloff = Falloff.fromDistance(distance).toVector3()
+        val correctedDirection = -direction
 
-        val shaderLight = DefaultShaderLight(
-            type = type,
-            position = position,
+        val shaderLight = ShaderLight.Spot(
             color = color,
-            intensity = intensity,
-            direction = degreesToLightDir(direction),
+            intensity = color.a,
+            position = position,
             falloff = falloff,
-            spotAngle = spotAngle
+            direction = correctedDirection,
+            spotAngle = coneDegree,
+            distance = distance,
+        )
+        val b2dLight = ConeLight(
+            rayHandler,
+            rays,
+            color,
+            distance,
+            position.x,
+            position.y,
+            correctedDirection,
+            coneDegree,
         )
 
-        val box2dLight = when (type) {
-            LightType.POINT -> PointLight(rayHandler, 128, color, color.a * intensity, position.x, position.y)
-            LightType.SPOT -> ConeLight(rayHandler, 128, color, color.a * intensity, position.x, position.y, direction, spotAngle)
-            LightType.DIRECTIONAL -> DirectionalLight(rayHandler, 128, color, direction)
-        }
+        val gameLight = GameLight.Spot(shaderLight, b2dLight)
 
-        val combined = CombinedLight(
-            type = type,
-            position = position,
-            color = color,
-            intensity = intensity,
-            directionAngle = direction,
-            direction = degreesToLightDir(direction),
-            falloff = falloff,
-            spotAngle = spotAngle,
-            shaderLight = shaderLight,
-            box2dLight = box2dLight
-        )
+        lights.add(gameLight)
+        return gameLight
 
-        lights.add(combined)
-        return combined
     }
 
     fun setNormalInfluence(normalInfluenceValue: Float) {
@@ -150,6 +204,7 @@ abstract class AbstractLightEngine(
     abstract fun applyShaderUniforms()
 
     open fun resize(width: Int, height: Int) {
+        viewport.update(width, height, true)
         val scale = Gdx.graphics.backBufferScale
         rayHandler.setCombinedMatrix(cam)
         shader.bind()

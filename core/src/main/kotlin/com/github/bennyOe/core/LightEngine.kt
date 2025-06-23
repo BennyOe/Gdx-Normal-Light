@@ -1,15 +1,11 @@
 package com.github.bennyOe.core
 
 import box2dLight.RayHandler
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.utils.viewport.Viewport
+import com.github.bennyOe.core.utils.degreesToLightDir
+import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.math.vec3
 import ktx.math.vec4
 import java.lang.Math.toRadians
@@ -20,8 +16,9 @@ class LightEngine(
     cam: OrthographicCamera,
     batch: SpriteBatch,
     viewport: Viewport,
+    useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 20,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, maxShaderLights) {
+) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
 
     override fun resize(width: Int, height: Int) {
         super.resize(width, height)
@@ -43,37 +40,36 @@ class LightEngine(
         shader.setUniformf("u_viewportSize", screenW, screenH)
 
         for (i in shaderLights.indices) {
-            val light = shaderLights[i]
+            val data = lights[i].data
             val prefix = "[$i]"
-            shader.setUniformi("lightType$prefix", light.type.ordinal)
-            val inputWorld = viewport.unproject(Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()))
+            shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
 
-            val normalizedX = (inputWorld.x - viewport.camera.position.x + viewport.worldWidth / 2f) / viewport.worldWidth
-            val normalizedY = (inputWorld.y - viewport.camera.position.y + viewport.worldHeight / 2f) / viewport.worldHeight
+            when (data) {
+                is ShaderLight.Directional -> {
+                    shader.setUniformi("lightType$prefix", 0)
+                    val directionVector = degreesToLightDir(data.direction, data.elevation)
+                    shader.setUniformf("lightDir$prefix", directionVector)
+                }
 
-            shader.setUniformf("lightPos[$i]", vec3(normalizedX, normalizedY, 0f))
+                is ShaderLight.Point -> {
+                    shader.setUniformi("lightType$prefix", 1)
 
-//            shader.setUniformf(
-//                "lightPos[$i]",
-//                vec3(
-//                    Gdx.input.x.toFloat() / Gdx.graphics.width.toFloat(),
-//                    1f - Gdx.input.y.toFloat() / Gdx.graphics.height.toFloat(),
-//                    0f
-//                )
-//            )
-            shader.setUniformf("lightDir$prefix", light.direction)
+                    val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)
+                    shader.setUniformf("lightPos[$i]", screenPos)
+                    shader.setUniformf("falloff$prefix", data.falloff)
+                }
 
-            shader.setUniformf(
-                "lightColor$prefix", vec4(
-                    light.color.r,
-                    light.color.g,
-                    light.color.b,
-                    light.color.a * light.intensity
-                )
-            )
-            shader.setUniformf("falloff$prefix", light.falloff)
-            shader.setUniformf("coneAngle$prefix", cos(toRadians(light.spotAngle.toDouble())).toFloat())
-            shader.setUniformi("lightType$prefix", light.type.ordinal)
+                is ShaderLight.Spot -> {
+                    shader.setUniformi("lightType$prefix", 2)
+
+                    val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)
+                    shader.setUniformf("lightPos[$i]", screenPos)
+                    shader.setUniformf("falloff$prefix", data.falloff)
+                    val directionVector = degreesToLightDir(data.direction)
+                    shader.setUniformf("lightDir$prefix", directionVector)
+                    shader.setUniformf("coneAngle$prefix", cos(Math.toRadians(data.spotAngle.toDouble())).toFloat())
+                }
+            }
         }
     }
 }

@@ -33,8 +33,9 @@ class Scene2dLightEngine(
     batch: SpriteBatch,
     viewport: Viewport,
     val stage: Stage?,
+    useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 20,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, maxShaderLights) {
+) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
 
     override fun resize(width: Int, height: Int) {
         if (stage == null) return
@@ -59,40 +60,22 @@ class Scene2dLightEngine(
         shader.setUniformf("u_viewportSize", screenW, screenH)
 
         for (i in shaderLights.indices) {
-            val light = shaderLights[i]
+            val data = (lights[i] as GameLight).data
             val prefix = "[$i]"
-            shader.setUniformi("lightType$prefix", light.type.ordinal)
+            shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
+
             val inputWorld = viewport.unproject(Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()))
 
             val normalizedX = (inputWorld.x - viewport.camera.position.x + viewport.worldWidth / 2f) / viewport.worldWidth
             val normalizedY = (inputWorld.y - viewport.camera.position.y + viewport.worldHeight / 2f) / viewport.worldHeight
 
             shader.setUniformf("lightPos[$i]", vec3(normalizedX, normalizedY, 0f))
-            val label = Label("$normalizedX $normalizedY", Label.LabelStyle(BitmapFont(), Color.WHITE))
-            label.setPosition(20f, 20f)
-            stage.addActor(label)
 
-//            shader.setUniformf(
-//                "lightPos[$i]",
-//                vec3(
-//                    Gdx.input.x.toFloat() / Gdx.graphics.width.toFloat(),
-//                    1f - Gdx.input.y.toFloat() / Gdx.graphics.height.toFloat(),
-//                    0f
-//                )
-//            )
-            shader.setUniformf("lightDir$prefix", light.direction)
-
-            shader.setUniformf(
-                "lightColor$prefix", vec4(
-                    light.color.r,
-                    light.color.g,
-                    light.color.b,
-                    light.color.a * light.intensity
-                )
-            )
-            shader.setUniformf("falloff$prefix", light.falloff)
-            shader.setUniformf("coneAngle$prefix", cos(toRadians(light.spotAngle.toDouble())).toFloat())
-            shader.setUniformi("lightType$prefix", light.type.ordinal)
+//            shader.setUniformf("lightDir$prefix", light.direction)
+//
+//            shader.setUniformf("falloff$prefix", light.falloff)
+//            shader.setUniformf("coneAngle$prefix", cos(toRadians(light.spotAngle.toDouble())).toFloat())
+//            shader.setUniformi("lightType$prefix", light.type.ordinal)
         }
     }
 }

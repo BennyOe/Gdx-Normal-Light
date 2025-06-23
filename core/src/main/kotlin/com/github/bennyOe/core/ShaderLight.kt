@@ -4,14 +4,32 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 
-interface ShaderLight {
-    val position: Vector2
-    val color: Color
-    val intensity: Float
-    val direction: Vector3
-    val falloff: Vector3
-    val type: LightType
-    val spotAngle: Float
+sealed class ShaderLight {
+    abstract var color: Color
+    abstract var intensity: Float
 
-    fun updateFrom(source: GameLight)
+    data class Directional(
+        override var color: Color,
+        override var intensity: Float,
+        var direction: Float,
+        var elevation: Float,
+    ) : ShaderLight()
+
+    data class Point(
+        override var color: Color,
+        override var intensity: Float,
+        var position: Vector2,
+        var falloff: Vector3,
+        var distance: Float,
+    ) : ShaderLight()
+
+    data class Spot(
+        override var color: Color,
+        override var intensity: Float,
+        var position: Vector2,
+        var falloff: Vector3,
+        var direction: Float,
+        var spotAngle: Float,
+        var distance: Float,
+    ) : ShaderLight()
 }

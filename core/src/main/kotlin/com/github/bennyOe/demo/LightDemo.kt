@@ -9,26 +9,26 @@ import ktx.math.vec2
 
 class LightDemo : AbstractLightDemo() {
     private lateinit var lightEngine: LightEngine
-    private lateinit var light: GameLight
+    private lateinit var light: GameLight.Point
 
     override fun show() {
         super.show()
 
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
-//        light = lightEngine.addPointLight(
-//            vec2(16f, 6f),
-//            Color(1f, 0f, 1f, 1f),
-//            12f,
-//        )
+        light = lightEngine.addPointLight(
+            vec2(16f, 6f),
+            Color(1f, 0f, 1f, 1f),
+            12f,
+        )
 //        lightEngine.addDirectionalLight(Color(1f, 0.3f, 0.5f, 0.5f), 0f, 1f, 0.3f)
 
-        light = lightEngine.addSpotLight(
-            vec2(6f, 4f),
-            Color(1f, 0f, 1f, 1f),
-            0f,
-            80f,
-            88f,
-        )
+//        light = lightEngine.addSpotLight(
+//            vec2(6f, 4f),
+//            Color(1f, 0f, 1f, 1f),
+//            0f,
+//            60f,
+//            12f,
+//        )
     }
 
     override fun resize(width: Int, height: Int) {
@@ -41,8 +41,7 @@ class LightDemo : AbstractLightDemo() {
         cam.update()
         viewport.apply()
 
-//        val lightData = light.data as ShaderLight.Point
-//        lightData.intensity -= 0.01f
+//        light.distance += 0.1f
         lightEngine.update()
 
         batch.projectionMatrix = cam.combined

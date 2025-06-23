@@ -12,12 +12,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.core.utils.degreesToLightDir
 import ktx.assets.disposeSafely
-import ktx.math.vec3
 
 abstract class AbstractLightEngine(
     val rayHandler: RayHandler,
@@ -38,7 +35,7 @@ abstract class AbstractLightEngine(
     init {
         setupShader()
         setAmbientLight(Color(1f, 1f, 1f, 0.05f))
-        RayHandler.useDiffuseLight(true)
+        RayHandler.useDiffuseLight(false)
         batch.shader = shader
     }
 
@@ -60,7 +57,7 @@ abstract class AbstractLightEngine(
         intensity: Float,
         elevation: Float = 1f,
         rays: Int = 128
-    ): GameLight {
+    ): GameLight.Directional {
         val correctedDirection = -direction
         val shaderLight = ShaderLight.Directional(
             color = color,
@@ -86,7 +83,7 @@ abstract class AbstractLightEngine(
         color: Color,
         distance: Float = 1f,
         rays: Int = 128,
-    ): GameLight {
+    ): GameLight.Point {
         val falloff = Falloff.fromDistance(distance).toVector3()
 
         val shaderLight = ShaderLight.Point(
@@ -118,7 +115,7 @@ abstract class AbstractLightEngine(
         coneDegree: Float,
         distance: Float = 1f,
         rays: Int = 128,
-    ): GameLight {
+    ): GameLight.Spot {
         val falloff = Falloff.fromDistance(distance).toVector3()
         val correctedDirection = -direction
 

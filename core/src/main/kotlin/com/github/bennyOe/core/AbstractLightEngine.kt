@@ -21,21 +21,21 @@ abstract class AbstractLightEngine(
     val cam: OrthographicCamera,
     val batch: SpriteBatch,
     val viewport: Viewport,
-    val useDiffuseLight: Boolean = false,
+    val useDiffuseLight: Boolean,
     val maxShaderLights: Int = 20,
 ) {
     protected val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     protected val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")
     protected lateinit var shader: ShaderProgram
-    protected lateinit var shaderAmbientLight: Color
+    protected lateinit var shaderAmbient: Color
     protected val lights = mutableListOf<GameLight>()
     protected val shaderLights get() = lights.take(maxShaderLights)
     protected var normalInfluenceValue: Float = 1f
 
     init {
         setupShader()
-        setAmbientLight(Color(1f, 1f, 1f, 0.05f))
-        RayHandler.useDiffuseLight(false)
+        RayHandler.useDiffuseLight(useDiffuseLight)
+        setShaderAmbientLight(Color(1f, 1f, 1f, 0.02f))
         batch.shader = shader
     }
 
@@ -121,11 +121,14 @@ abstract class AbstractLightEngine(
 
         val shaderLight = ShaderLight.Spot(
             color = color,
-            intensity = color.a,
+            // TODO the intensity must be set explicitly, so it can get > 1
+            intensity = color.a * 3,
             position = position,
             falloff = falloff,
             direction = correctedDirection,
-            spotAngle = coneDegree,
+            // TODO must be set to the same size as the b2dLight
+            spotAngle = coneDegree + 10,
+            // TODO 180deg must be a half circle
             distance = distance,
         )
         val b2dLight = ConeLight(
@@ -147,7 +150,7 @@ abstract class AbstractLightEngine(
     }
 
     fun setNormalInfluence(normalInfluenceValue: Float) {
-        shader.setUniformf("normalInfluence", normalInfluenceValue)
+        this.normalInfluenceValue = normalInfluenceValue
     }
 
     fun removeLight(light: GameLight) {
@@ -162,17 +165,8 @@ abstract class AbstractLightEngine(
         shader.setUniformi("lightCount", 0)
     }
 
-    fun setAmbientLight(ambient: Color) {
-        rayHandler.setAmbientLight(ambient)
-        shaderAmbientLight = ambient
-        shader.setUniformf("ambient", shaderAmbientLight)
-    }
-
-    fun setAmbientLight(r: Float, g: Float, b: Float, a: Float = 0.3f) {
-        val ambient = Color(r, g, b, a)
-        rayHandler.setAmbientLight(ambient)
-        shaderAmbientLight = ambient
-        shader.setUniformf("ambient", shaderAmbientLight)
+    fun setShaderAmbientLight(ambient: Color) {
+        shaderAmbient = ambient
     }
 
     fun update() = lights.forEach { it.update() }

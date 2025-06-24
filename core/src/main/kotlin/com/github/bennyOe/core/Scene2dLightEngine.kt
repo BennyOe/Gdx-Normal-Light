@@ -1,31 +1,14 @@
 package com.github.bennyOe.core
 
-import box2dLight.ConeLight
-import box2dLight.DirectionalLight
-import box2dLight.PointLight
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.files.FileHandle
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Label
-import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.core.utils.degreesToLightDir
-import ktx.assets.disposeSafely
-import ktx.log.logger
-import ktx.math.vec2
 import ktx.math.vec3
 import ktx.math.vec4
-import java.lang.Math.toRadians
-import kotlin.math.cos
 
 class Scene2dLightEngine(
     rayHandler: RayHandler,
@@ -49,7 +32,7 @@ class Scene2dLightEngine(
         shader.bind()
         shader.setUniformi("lightCount", shaderLights.size)
         shader.setUniformf("normalInfluence", normalInfluenceValue)
-        shader.setUniformf("ambient", shaderAmbientLight)
+        shader.setUniformf("ambient", shaderAmbient)
 
         val screenX = viewport.screenX.toFloat()
         val screenY = viewport.screenY.toFloat()

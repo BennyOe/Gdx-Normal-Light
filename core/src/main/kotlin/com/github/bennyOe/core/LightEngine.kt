@@ -8,7 +8,6 @@ import com.github.bennyOe.core.utils.degreesToLightDir
 import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.math.vec3
 import ktx.math.vec4
-import java.lang.Math.toRadians
 import kotlin.math.cos
 
 class LightEngine(
@@ -29,7 +28,7 @@ class LightEngine(
         shader.bind()
         shader.setUniformi("lightCount", shaderLights.size)
         shader.setUniformf("normalInfluence", normalInfluenceValue)
-        shader.setUniformf("ambient", shaderAmbientLight)
+        shader.setUniformf("ambient", shaderAmbient)
 
         val screenX = viewport.screenX.toFloat()
         val screenY = viewport.screenY.toFloat()

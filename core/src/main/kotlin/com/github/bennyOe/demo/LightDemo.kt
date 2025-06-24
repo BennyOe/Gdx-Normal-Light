@@ -9,24 +9,29 @@ import ktx.math.vec2
 
 class LightDemo : AbstractLightDemo() {
     private lateinit var lightEngine: LightEngine
-    private lateinit var light: GameLight.Point
+    private lateinit var light: GameLight.Spot
 
     override fun show() {
         super.show()
 
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
-        light = lightEngine.addPointLight(
-            vec2(16f, 6f),
-            Color(1f, 0f, 1f, 1f),
-            12f,
+//        light = lightEngine.addPointLight(
+//            vec2(16f, 6f),
+//            Color(1f, 0f, 1f, 1f),
+//            12f,
+//        )
+        lightEngine.addDirectionalLight(
+            Color(1f, 1f, 1f, .8f),
+            -90f,
+            .9f,
+            1.3f
         )
-//        lightEngine.addDirectionalLight(Color(1f, 0.3f, 0.5f, 0.5f), 0f, 1f, 0.3f)
 
 //        light = lightEngine.addSpotLight(
 //            vec2(6f, 4f),
-//            Color(1f, 0f, 1f, 1f),
-//            0f,
-//            60f,
+//            Color(1f, 1f, 1f, 1f),
+//            270f,
+//            90f,
 //            12f,
 //        )
     }

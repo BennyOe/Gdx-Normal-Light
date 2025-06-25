@@ -44,7 +44,8 @@ sealed class GameLight(
 
     data class Point(
         override val data: ShaderLight.Point,
-        override val b2dLight: PointLight
+        override val b2dLight: PointLight,
+        var shaderBalance: Float = 1.0f,
     ) : GameLight(data, b2dLight) {
         var intensity: Float
             get() = data.intensity
@@ -69,13 +70,13 @@ sealed class GameLight(
             b2dLight.setColor(data.color.r, data.color.g, data.color.b, finalAlpha)
             b2dLight.distance = data.distance
             b2dLight.setPosition(data.position)
-            println(b2dLight.distance)
         }
     }
 
     data class Spot(
         override val data: ShaderLight.Spot,
         override val b2dLight: ConeLight,
+        var shaderBalance: Float = 1.0f,
     ) : GameLight(data, b2dLight) {
         var intensity: Float
             get() = data.intensity
@@ -90,9 +91,9 @@ sealed class GameLight(
             }
 
         var direction: Float
-            get() = data.direction
+            get() = data.directionDegree
             set(value) {
-                data.direction = value
+                data.directionDegree = value
             }
 
         var distance: Float
@@ -102,18 +103,18 @@ sealed class GameLight(
             }
 
         var coneDegree: Float
-            get() = data.spotAngle
+            get() = data.coneDegree
             set(value) {
-                data.spotAngle = value
+                data.coneDegree = value
             }
 
         override fun update() {
-            val finalAlpha = data.color.a * data.intensity
-            b2dLight.setColor(data.color.r, data.color.g, data.color.b, finalAlpha)
-            b2dLight.distance = data.distance
-            b2dLight.position = data.position
-            b2dLight.direction = data.direction
-            b2dLight.coneDegree = data.spotAngle
+//            val finalAlpha = data.color.a * data.intensity
+//            b2dLight.setColor(data.color.r, data.color.g, data.color.b, finalAlpha)
+//            b2dLight.distance = data.distance
+//            b2dLight.position = data.position
+//            b2dLight.direction = data.direction
+//            b2dLight.coneDegree = data.spotAngle
         }
     }
 }

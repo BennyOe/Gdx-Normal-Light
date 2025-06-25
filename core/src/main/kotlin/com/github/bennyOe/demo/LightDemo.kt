@@ -9,31 +9,41 @@ import ktx.math.vec2
 
 class LightDemo : AbstractLightDemo() {
     private lateinit var lightEngine: LightEngine
-    private lateinit var light: GameLight.Spot
+    private lateinit var light: GameLight.Point
+    private lateinit var spotLight: GameLight.Spot
 
     override fun show() {
         super.show()
-
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
-//        light = lightEngine.addPointLight(
-//            vec2(16f, 6f),
-//            Color(1f, 0f, 1f, 1f),
-//            12f,
+
+//        lightEngine.addDirectionalLight(
+//            Color(0.8f, 0.8f, 1f, 0.25f),
+//            -45f,
+//            2.8f,
+//            40f
 //        )
-        lightEngine.addDirectionalLight(
-            Color(1f, 1f, 1f, .8f),
-            -90f,
-            .9f,
-            1.3f
+
+        light = lightEngine.addPointLight(
+            vec2(6f, 6f),
+            Color(1f, 1f, 1f, 1f),
+            2f,
+            7f,
+            1f,
+            1f
         )
 
-//        light = lightEngine.addSpotLight(
-//            vec2(6f, 4f),
+//        spotLight = lightEngine.addSpotLight(
+//            vec2(6f, 5f),
 //            Color(1f, 1f, 1f, 1f),
-//            270f,
+//            0f,
 //            90f,
-//            12f,
+//            4f,
+//            10f,
+//            0.5f,
+//            2f,
 //        )
+
+        lightEngine.setNormalInfluence(0.8f)
     }
 
     override fun resize(width: Int, height: Int) {
@@ -54,7 +64,7 @@ class LightDemo : AbstractLightDemo() {
         lightEngine.renderLights {
             wallNormals.bind(1)
             wall.bind(0)
-            batch.draw(wall, 0f, 0f, 19f, 9f)
+            batch.draw(wall, 0f, 0f, 38f, 18f)
         }
         debugRenderer.render(world, cam.combined)
     }

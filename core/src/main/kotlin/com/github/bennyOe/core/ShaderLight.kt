@@ -28,8 +28,8 @@ sealed class ShaderLight {
         override var intensity: Float,
         var position: Vector2,
         var falloff: Vector3,
-        var direction: Float,
-        var spotAngle: Float,
+        var directionDegree: Float,
+        var coneDegree: Float,
         var distance: Float,
     ) : ShaderLight()
 }

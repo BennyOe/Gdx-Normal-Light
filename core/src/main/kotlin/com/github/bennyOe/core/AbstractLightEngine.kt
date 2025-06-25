@@ -104,8 +104,8 @@ abstract class AbstractLightEngine(
      *
      * @param position The world position of the light source.
      * @param color The color of the light. The alpha component is multiplied by the intensity.
-     * @param intensity The base intensity of the light, affecting both the visual shader and the b2dLight.
-     * @param distance The maximum range of the light. This defines the radius for shadow casting and the falloff calculation.
+     * @param shaderIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
+     * @param b2dDistance The maximum range of the light. This defines the radius for shadow casting and the falloff calculation.
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @param falloffProfile A value between 0.0 and 1.0 that controls the shape of the light's falloff. 0.0 is more linear, 1.0 is strongly quadratic.
      * @param shaderBalance A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
@@ -127,7 +127,6 @@ abstract class AbstractLightEngine(
             intensity = shaderIntensity,
             position = position,
             falloff = falloff,
-            distance = b2dDistance,
         )
         val b2dLight = PointLight(
             rayHandler,
@@ -181,7 +180,6 @@ abstract class AbstractLightEngine(
             falloff = falloff,
             directionDegree = direction,
             coneDegree = coneDegree,
-            distance = b2dDistance,
         )
         val b2dLight = ConeLight(
             rayHandler,

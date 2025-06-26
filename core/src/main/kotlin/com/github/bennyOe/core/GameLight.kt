@@ -13,7 +13,7 @@ interface IGameLight {
 }
 
 sealed class GameLight(
-    open val data: ShaderLight,
+    open val shaderLight: ShaderLight,
     open val b2dLight: Light
 ) : IGameLight {
 
@@ -21,122 +21,124 @@ sealed class GameLight(
     override fun remove() {}
 
     data class Directional(
-        override val data: ShaderLight.Directional,
+        override val shaderLight: ShaderLight.Directional,
         override val b2dLight: DirectionalLight,
-    ) : GameLight(data, b2dLight) {
+    ) : GameLight(shaderLight, b2dLight) {
         var intensity: Float
-            get() = data.intensity
+            get() = shaderLight.intensity
             set(value) {
-                data.intensity = value
+                shaderLight.intensity = value
             }
 
         var color: Color
-            get() = data.color
+            get() = shaderLight.color
             set(value) {
-                data.color = value
+                shaderLight.color = value
                 b2dLight.color = value
             }
 
         var direction: Float
-            get() = data.direction
+            get() = shaderLight.direction
             set(value) {
-                data.direction = value
+                shaderLight.direction = value
                 b2dLight.direction = value
             }
 
         override fun update() {
-            b2dLight.setColor(data.color.r, data.color.g, data.color.b, b2dLight.color.a)
+            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
         }
     }
 
     data class Point(
-        override val data: ShaderLight.Point,
+        override val shaderLight: ShaderLight.Point,
         override val b2dLight: PointLight,
         var shaderBalance: Float = 1.0f,
-    ) : GameLight(data, b2dLight) {
+    ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
-            get() = data.position
+            get() = shaderLight.position
             set(value) {
-                data.position = value
+                shaderLight.position = value
                 b2dLight.position = value
             }
 
         var color: Color
-            get() = data.color
+            get() = shaderLight.color
             set(value) {
-                data.color = value
+                shaderLight.color = value
                 b2dLight.setColor(value)
             }
 
         // --- Independent Properties ---
-        var intensity: Float
-            get() = data.intensity
+        var shaderIntensity: Float
+            get() = shaderLight.intensity
             set(value) {
-                data.intensity = value
+                shaderLight.intensity = value
             }
 
         var distance: Float
             get() = b2dLight.distance
             set(value) {
                 b2dLight.distance = value
-                data.falloff = Falloff.fromDistance(value).toVector3()
+                shaderLight.falloff = Falloff.fromDistance(value).toVector3()
             }
 
         override fun update() {
-            b2dLight.setColor(data.color.r, data.color.g, data.color.b, b2dLight.color.a)
+            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
+            b2dLight.position = shaderLight.position
         }
     }
 
     data class Spot(
-        override val data: ShaderLight.Spot,
+        override val shaderLight: ShaderLight.Spot,
         override val b2dLight: ConeLight,
         var shaderBalance: Float = 1.0f,
-    ) : GameLight(data, b2dLight) {
+    ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
-            get() = data.position
+            get() = shaderLight.position
             set(value) {
-                data.position = value
+                shaderLight.position = value
                 b2dLight.position = value
             }
 
         var direction: Float
-            get() = data.directionDegree
+            get() = shaderLight.directionDegree
             set(value) {
-                data.directionDegree = value
+                shaderLight.directionDegree = value
                 b2dLight.direction = value
             }
 
         var color: Color
-            get() = data.color
+            get() = shaderLight.color
             set(value) {
-                data.color = value
+                shaderLight.color = value
                 b2dLight.setColor(value.r, value.g, value.b, b2dLight.color.a)
             }
 
 
         // --- Independent Properties ---
         var shaderIntensity: Float
-            get() = data.intensity
+            get() = shaderLight.intensity
             set(value) {
-                data.intensity = value
+                shaderLight.intensity = value
             }
 
         var distance: Float
             get() = b2dLight.distance
             set(value) {
                 b2dLight.distance = value
-                data.falloff = Falloff.fromDistance(value).toVector3()
+                shaderLight.falloff = Falloff.fromDistance(value).toVector3()
             }
 
         var coneDegree: Float
-            get() = data.coneDegree
+            get() = shaderLight.coneDegree
             set(value) {
-                data.coneDegree = value
+                shaderLight.coneDegree = value
                 b2dLight.coneDegree = value / 2f
             }
 
         override fun update() {
-            b2dLight.setColor(data.color.r, data.color.g, data.color.b, b2dLight.color.a)
+            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
+            b2dLight.position = shaderLight.position
         }
     }
 }

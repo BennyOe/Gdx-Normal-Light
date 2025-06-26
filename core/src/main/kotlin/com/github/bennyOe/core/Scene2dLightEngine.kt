@@ -43,7 +43,7 @@ class Scene2dLightEngine(
         shader.setUniformf("u_viewportSize", screenW, screenH)
 
         for (i in shaderLights.indices) {
-            val data = (lights[i] as GameLight).data
+            val data = (lights[i] as GameLight).shaderLight
             val prefix = "[$i]"
             shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
 

@@ -4,7 +4,6 @@ import box2dLight.RayHandler
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.core.utils.degreesToLightDir
 import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.math.vec3
 import ktx.math.vec4
@@ -41,7 +40,7 @@ class LightEngine(
 
         for (i in shaderLights.indices) {
             val gameLight = lights[i]
-            val data = lights[i].data
+            val data = lights[i].shaderLight
             val prefix = "[$i]"
             shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
 

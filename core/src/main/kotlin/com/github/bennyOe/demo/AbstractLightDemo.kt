@@ -94,21 +94,6 @@ abstract class AbstractLightDemo : KtxScreen {
         shape.dispose()
     }
 
-//    protected fun createLights(lightEngine: AbstractLightEngine): GameLight {
-//        lightEngine.setAmbientLight(Color(1f, 1f, 1f, 0.2f))
-
-//        return lightEngine.addDirectionalLight(Color(1f, 0.3f, 0.5f, 0.5f), 0f, 1f, 0.3f)
-
-
-//        return lightEngine.addSpotLight(
-//            vec2(6f, 4f),
-//            Color(1f, 0f, 1f, 1f),
-//            0f,
-//            80f,
-//            9f
-//        )
-//    }
-
     override fun dispose() {
         batch.disposeSafely()
         wall.disposeSafely()

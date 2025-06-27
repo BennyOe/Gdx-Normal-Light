@@ -82,10 +82,6 @@ void main() {
                                           // Create a modifiable copy of the light's direction vector.
                                           vec3 corrected_lightDir = lightDir[i];
 
-                                          // Apply the same aspect ratio correction to the light's direction.
-                                          // This is crucial for a stable cone shape when the window is resized.
-                                          corrected_lightDir.x *= u_viewportSize.x / u_viewportSize.y;
-
                                           // Calculate the angle (theta) by comparing the two vectors in the SAME corrected space.
                                           float theta = dot(normalize(corrected_lightDir), -l);
 

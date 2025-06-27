@@ -1,7 +1,10 @@
 package com.github.bennyOe.core
 
 import box2dLight.RayHandler
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.viewport.Viewport
 
@@ -13,6 +16,74 @@ class LightEngine(
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 20,
 ) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
+
+    /**
+     * Performs the complete lighting render pass using normal mapping and Box2D shadows.
+     *
+     * This function sets up the shader, uploads all light properties, invokes a user-provided lambda to render the
+     * scene with lighting, and then renders Box2D-based shadows on top. It must be called once per frame.
+     *
+     * ### What this function does:
+     * - Configures the batch with the shader and camera matrix.
+     * - Applies lighting-related uniforms to the shader (light count, color, falloff, direction, etc.).
+     * - Calls the [drawScene] lambda where you render all visible objects using your own draw logic.
+     * - Renders Box2D shadows via [RayHandler].
+     *
+     * ### Requirements inside [drawScene]:
+     * - **Normal map must be bound to texture unit 1** before calling `batch.draw(...)`.
+     * - **Diffuse texture must be bound to texture unit 0** before calling `batch.draw(...)`.
+     * - Use the batch normally for rendering your sprites — lighting will be automatically applied by the shader.
+     *
+     * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
+     */
+    fun renderLights(drawScene: (LightEngine) -> Unit) {
+        batch.projectionMatrix = cam.combined
+        viewport.apply()
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
+
+        batch.shader = shader
+        applyShaderUniforms()
+        batch.begin()
+
+        drawScene(this)
+
+        batch.end()
+        batch.shader = null
+
+        rayHandler.setCombinedMatrix(cam)
+        rayHandler.updateAndRender()
+    }
+
+    /**
+     * Draws a textured quad with a diffuse and normal map, binding them to the correct texture units.
+     *
+     * This method binds the provided diffuse texture to texture unit 0 and the normal map to texture unit 1,
+     * ensuring they are properly used by the lighting shader. It should only be called within the [renderLights] lambda.
+     *
+     * If the normal map differs from the previously used one, the batch is flushed to prevent texture conflicts.
+     *
+     * @param diffuse The diffuse texture (base color).
+     * @param normals The corresponding normal map texture.
+     * @param x The x-position in world coordinates.
+     * @param y The y-position in world coordinates.
+     * @param width The width of the quad to draw.
+     * @param height The height of the quad to draw.
+     */
+    fun draw(
+        diffuse: Texture,
+        normals: Texture,
+        x: Float, y: Float,
+        width: Float, height: Float,
+    ) {
+        if (normals != lastNormalMap && lastNormalMap != null) {
+            batch.flush()
+        }
+
+        normals.bind(1)
+        diffuse.bind(0)
+        batch.draw(diffuse, x, y, width, height)
+        lastNormalMap = normals
+    }
 
     override fun resize(width: Int, height: Int) {
         super.resize(width, height)

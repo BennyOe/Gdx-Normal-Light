@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.github.bennyOe.core.GameLight
 import com.github.bennyOe.core.Scene2dLightEngine
 import com.github.bennyOe.scene2d.LightActor
+import com.github.bennyOe.scene2d.NormalMappedActor
 import ktx.math.vec2
 
 /**
@@ -68,6 +69,16 @@ class Scene2dLightDemo : AbstractLightDemo() {
         )
         spotActor = LightActor(spotLight)
         stage.addActor(spotActor)
+
+        val wallActor = NormalMappedActor(wall, wallNormals)
+        wallActor.setPosition(0f, 0f)
+        wallActor.setSize(9f, 19f)
+        stage.addActor(wallActor)
+
+        val woodActor = NormalMappedActor(wood, woodNormals)
+        woodActor.setPosition(9f, 0f)
+        woodActor.setSize(9f, 19f)
+        stage.addActor(woodActor)
     }
 
     override fun resize(width: Int, height: Int) {
@@ -87,13 +98,12 @@ class Scene2dLightDemo : AbstractLightDemo() {
         lightEngine.update()
         batch.projectionMatrix = cam.combined
 
-        lightEngine.renderLights {
-            wallNormals.bind(1)
-            wall.bind(0)
-            batch.draw(wall, 0f, 0f, 19f, 9f)
+        lightEngine.renderLights { engine ->
+            for (actor in stage.actors) {
+                    engine.draw(actor)
+            }
         }
 
-        stage.draw()
         debugRenderer.render(world, cam.combined)
     }
 

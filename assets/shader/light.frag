@@ -15,6 +15,7 @@ varying vec2 v_texCoord;      // Texture coordinates (UVs) for the current fragm
 // Uniforms are variables that are constant for all fragments in a single draw call.
 uniform sampler2D u_texture;  // The diffuse texture (the object's base color).
 uniform sampler2D u_normals;    // The normal map texture for this object.
+uniform bool u_useNormalMap; // Whether to use the normal map or not.
 
 uniform vec2 resolution;      // The resolution of the application window.
 uniform float normalInfluence;// How much the normal map affects lighting (0.0 - 1.0).
@@ -40,10 +41,17 @@ void main() {
     // 1. Get the base color from the diffuse texture.
     vec4 diffuseColor = texture2D(u_texture, v_texCoord);
 
-    // 2. Get the normal vector from the normal map.
-    // Texture values are in the 0-1 range, so map them to the -1 to 1 range.
-    vec3 normalMap = texture2D(u_normals, v_texCoord).rgb;
-    vec3 n = normalize(normalMap * 2.0 - 1.0);
+    // Decide whether to use a normal map if it is available.
+    vec3 n;
+    if (u_useNormalMap) {
+        // 2. Get the normal vector from the normal map.
+        // Texture values are in the 0-1 range, so map them to the -1 to 1 range.
+        vec3 normalMap = texture2D(u_normals, v_texCoord).rgb;
+        n = normalize(normalMap * 2.0 - 1.0);
+    } else {
+        // Fallback to a default normal if no normal map is used.
+        n = vec3(0.0, 0.0, 1.0); // Default normal pointing out of the screen.
+    }
 
     // 3. Initialize the final light color with the ambient light contribution.
     vec3 totalLight = ambient.rgb * ambient.a;

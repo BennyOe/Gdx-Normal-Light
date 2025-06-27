@@ -45,6 +45,7 @@ class LightEngine(
         applyShaderUniforms()
         batch.begin()
 
+        lastNormalMap = null
         drawScene(this)
 
         batch.end()
@@ -75,9 +76,11 @@ class LightEngine(
         x: Float, y: Float,
         width: Float, height: Float,
     ) {
-        if (normals != lastNormalMap && lastNormalMap != null) {
+        if (lastNormalMap == null || normals != lastNormalMap) {
             batch.flush()
         }
+        shader.bind()
+        shader.setUniformi("u_useNormalMap", 1)
 
         normals.bind(1)
         diffuse.bind(0)
@@ -87,6 +90,34 @@ class LightEngine(
 
     override fun resize(width: Int, height: Int) {
         super.resize(width, height)
+    }
+
+    /**
+     * Draws a textured quad using only a diffuse texture, without normal mapping.
+     *
+     * This method disables normal mapping by informing the shader to ignore the normal map.
+     * It is useful for objects that do not require dynamic lighting effects, such as UI elements,
+     * background layers, or sprites meant to remain unaffected by lighting.
+     *
+     * This function must also be called within the [renderLights] lambda to ensure the shader context is valid.
+     *
+     * @param diffuse The diffuse texture (base color).
+     * @param x The x-position in world coordinates.
+     * @param y The y-position in world coordinates.
+     * @param width The width of the quad to draw.
+     * @param height The height of the quad to draw.
+     */
+    fun draw(diffuse: Texture, x: Float, y: Float, width: Float, height: Float) {
+        if (lastNormalMap != null) {
+            batch.flush()
+        }
+
+        shader.bind()
+        shader.setUniformi("u_useNormalMap", 0)
+
+        diffuse.bind(0)
+        batch.draw(diffuse, x, y, width, height)
+        lastNormalMap = null
     }
 
 }

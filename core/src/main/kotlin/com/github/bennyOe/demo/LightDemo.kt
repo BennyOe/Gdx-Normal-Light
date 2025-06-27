@@ -132,7 +132,7 @@ class LightDemo : AbstractLightDemo() {
 
         lightEngine.renderLights { engine ->
             engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
-            engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
+            engine.draw(wood, 9f, 0f, 9f, 19f)
 
         }
         // Render Box2D debug lines

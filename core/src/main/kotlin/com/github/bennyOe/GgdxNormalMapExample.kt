@@ -10,8 +10,8 @@ class GgdxNormalMapExample : KtxGame<KtxScreen>() {
     override fun create() {
         KtxAsync.initiate()
 
-        addScreen(Scene2dLightDemo())
-        setScreen<Scene2dLightDemo>()
+        addScreen(LightDemo())
+        setScreen<LightDemo>()
     }
 }
 

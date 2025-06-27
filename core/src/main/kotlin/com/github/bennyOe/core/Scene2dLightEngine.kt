@@ -58,30 +58,37 @@ class Scene2dLightEngine(
     }
 
     /**
-     * Renders a normal-mapped actor by binding its diffuse and normal map textures
-     * to the correct texture units and drawing the diffuse texture to the screen.
+     * Draws a Scene2D [Actor] with optional normal mapping.
      *
-     * This method ensures proper use of the lighting shader by binding the diffuse
-     * texture to texture unit 0 and the normal map to texture unit 1. If the normal
-     * map differs from the previously used one, the sprite batch is flushed to avoid
-     * rendering artifacts caused by texture binding changes.
+     * If the actor is a [NormalMappedActor], it binds the normal map to texture unit 1
+     * and the diffuse texture to unit 0, and renders it with lighting effects applied.
+     * If the actor is not normal-mapped, it disables normal mapping in the shader and
+     * renders the actor using the standard [Actor.draw] method.
      *
-     * This method must be called **within** the `renderLights` lambda block, so that
-     * lighting shaders and uniforms are active.
+     * This method must be called **within** the [renderLights] lambda to ensure lighting
+     * uniforms and shader context are active.
      *
-     * @param actor The [NormalMappedActor] to draw, which provides both a diffuse
-     *              and a normal map texture, along with position and size.
+     * @param actor The [Actor] to render. May or may not have an associated normal map.
      */
     fun draw(actor: Actor) {
-        if (actor !is NormalMappedActor) return
-        if (actor.normalMapTexture != lastNormalMap && lastNormalMap != null) {
-            batch.flush()
-        }
+        if (actor is NormalMappedActor) {
+            if (lastNormalMap == null || lastNormalMap != actor.normalMapTexture) {
+                batch.flush()
+            }
+            shader.bind()
+            shader.setUniformi("u_useNormalMap", 1)
 
-        actor.normalMapTexture.bind(1)
-        actor.diffuseTexture.bind(0)
-        batch.draw(actor.diffuseTexture, actor.x, actor.y, actor.width, actor.height)
-        lastNormalMap = actor.normalMapTexture
+            actor.normalMapTexture.bind(1)
+            actor.diffuseTexture.bind(0)
+            batch.draw(actor.diffuseTexture, actor.x, actor.y, actor.width, actor.height)
+            lastNormalMap = actor.normalMapTexture
+        } else {
+            if (lastNormalMap != null) batch.flush()
+            shader.bind()
+            shader.setUniformi("u_useNormalMap", 0)
+            actor.draw(batch, 1.0f)
+            lastNormalMap = null
+        }
     }
 
     override fun resize(width: Int, height: Int) {

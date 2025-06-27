@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.github.bennyOe.core.GameLight
 import com.github.bennyOe.core.Scene2dLightEngine
 import com.github.bennyOe.scene2d.LightActor
@@ -70,7 +71,7 @@ class Scene2dLightDemo : AbstractLightDemo() {
         spotActor = LightActor(spotLight)
         stage.addActor(spotActor)
 
-        val wallActor = NormalMappedActor(wall, wallNormals)
+        val wallActor = Image(wall)
         wallActor.setPosition(0f, 0f)
         wallActor.setSize(9f, 19f)
         stage.addActor(wallActor)

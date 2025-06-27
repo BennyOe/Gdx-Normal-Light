@@ -54,10 +54,10 @@ private fun fire(light: GameLight, intensity: Float) {
         val intensityVariation = (Math.random().toFloat() - 0.5f) * intensity * 0.5f
         light.currentTargetIntensity = (light.baseIntensity + intensityVariation).coerceIn(light.baseIntensity * 0.7f, light.baseIntensity * 1.3f)
 
-        val rVariation = (Math.random().toFloat() - 0.5f) * 0.2f
+        val rVariation = (Math.random().toFloat() - 0.5f) * 0.2f * intensity
         val newR = (light.baseColor.r + rVariation).coerceIn(0.8f, 1.0f)
 
-        val gVariation = (Math.random().toFloat() - 0.5f) * 0.4f
+        val gVariation = (Math.random().toFloat() - 0.5f) * 0.4f * intensity
         val newG = (light.baseColor.g + gVariation).coerceIn(0.3f, 0.5f)
 
         val newB = light.baseColor.b * 0.1f

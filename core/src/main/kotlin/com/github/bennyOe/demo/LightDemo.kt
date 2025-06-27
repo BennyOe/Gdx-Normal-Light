@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector3
 import com.github.bennyOe.core.GameLight
+import com.github.bennyOe.core.LightEffectType
 import com.github.bennyOe.core.LightEngine
 import ktx.assets.disposeSafely
 import ktx.math.vec2
@@ -23,6 +24,7 @@ import ktx.math.vec2
  * - Adjust intensity, distance, balance, and cone angle of lights.
  * - Change light color using the mouse wheel.
  * - Move the active light with the mouse cursor.
+ * - Add light effects [com.github.bennyOe.core.LightEffectType]
  *
  * Controls:
  * - 1/2: Switch active light (point/spot)
@@ -94,6 +96,7 @@ class LightDemo : AbstractLightDemo() {
             shaderBalance = 1f,
         )
 
+        pointLight.effect = LightEffectType.FIRE
 
         spotLight = lightEngine.addSpotLight(
             position = vec2(6f, 5f),

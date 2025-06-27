@@ -1,20 +1,17 @@
 package com.github.bennyOe.core
 
 import box2dLight.ConeLight
-import box2dLight.DirectionalLight
 import box2dLight.Light
-import box2dLight.PointLight
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector2
 
 interface IGameLight {
     fun update()
-    fun remove(lightEngine: AbstractLightEngine)
 }
 
 sealed class GameLight(
     open val shaderLight: ShaderLight,
-    open val b2dLight: Light,
+    open var b2dLight: Light,
     internal val baseIntensity: Float = shaderLight.intensity,
     internal val baseColor: Color = shaderLight.color,
     internal val baseDistance: Float = b2dLight.distance,
@@ -30,9 +27,6 @@ sealed class GameLight(
     internal var currentTargetIntensity = baseIntensity
 
     abstract override fun update()
-    override fun remove(lightEngine: AbstractLightEngine) {
-        lightEngine.removeLight(this)
-    }
 
     var color: Color
         get() = shaderLight.color
@@ -43,7 +37,7 @@ sealed class GameLight(
 
     data class Directional(
         override val shaderLight: ShaderLight.Directional,
-        override val b2dLight: DirectionalLight,
+        override var b2dLight: Light,
     ) : GameLight(shaderLight, b2dLight) {
         var intensity: Float
             get() = shaderLight.intensity
@@ -66,7 +60,7 @@ sealed class GameLight(
 
     data class Point(
         override val shaderLight: ShaderLight.Point,
-        override val b2dLight: PointLight,
+        override var b2dLight: Light,
         var shaderBalance: Float = 1.0f,
         var isFlickering: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
@@ -101,7 +95,7 @@ sealed class GameLight(
 
     data class Spot(
         override val shaderLight: ShaderLight.Spot,
-        override val b2dLight: ConeLight,
+        override var b2dLight: Light,
         var shaderBalance: Float = 1.0f,
         var isFlickering: Boolean = false,
     ) : GameLight(shaderLight, b2dLight) {
@@ -137,7 +131,7 @@ sealed class GameLight(
             get() = shaderLight.coneDegree
             set(value) {
                 shaderLight.coneDegree = value
-                b2dLight.coneDegree = value / 2f
+                (b2dLight as ConeLight).coneDegree = value / 2f
             }
 
         override fun update() {

@@ -69,7 +69,40 @@ abstract class AbstractLightEngine(
      *
      * @param light The [GameLight] instance to be managed and rendered by the engine.
      */
-    fun addLight(light: GameLight){
+    fun addLight(light: GameLight) {
+        if (lights.contains(light)) return
+
+        val newB2dLight = when (light) {
+            is GameLight.Directional -> DirectionalLight(
+                rayHandler,
+                light.b2dLight.rayNum,
+                light.b2dLight.color,
+                light.b2dLight.direction
+            )
+
+            is GameLight.Point -> PointLight(
+                rayHandler,
+                light.b2dLight.rayNum,
+                light.b2dLight.color,
+                light.b2dLight.distance,
+                light.b2dLight
+                    .position.x,
+                light.b2dLight.position.y
+            )
+
+            is GameLight.Spot -> ConeLight(
+                rayHandler,
+                light.b2dLight.rayNum,
+                light.b2dLight.color,
+                light.b2dLight.distance,
+                light.b2dLight.position.x,
+                light.b2dLight.position.y,
+                light.b2dLight.direction,
+                (light.b2dLight as ConeLight).coneDegree / 2
+            )
+        }
+        light.b2dLight = newB2dLight
+
         lights.add(light)
     }
 
@@ -232,6 +265,7 @@ abstract class AbstractLightEngine(
      * @param light The [GameLight] instance to remove.
      */
     fun removeLight(light: GameLight) {
+        light.b2dLight.remove()
         lights.remove(light)
         shader.bind()
         shader.setUniformi("lightCount", lights.size)
@@ -242,6 +276,7 @@ abstract class AbstractLightEngine(
      */
     fun clearLights() {
         lights.clear()
+        rayHandler.removeAll()
         shader.bind()
         shader.setUniformi("lightCount", 0)
     }

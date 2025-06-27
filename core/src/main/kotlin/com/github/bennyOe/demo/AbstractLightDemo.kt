@@ -1,7 +1,6 @@
 package com.github.bennyOe.demo
 
 import box2dLight.RayHandler
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -13,18 +12,10 @@ import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.utils.viewport.ExtendViewport
-import com.badlogic.gdx.utils.viewport.FillViewport
-import com.badlogic.gdx.utils.viewport.FitViewport
-import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.core.AbstractLightEngine
-import com.github.bennyOe.core.Falloff
-import com.github.bennyOe.core.GameLight
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
 import ktx.math.vec2
-import ktx.math.vec3
 
 abstract class AbstractLightDemo : KtxScreen {
     protected lateinit var cam: OrthographicCamera

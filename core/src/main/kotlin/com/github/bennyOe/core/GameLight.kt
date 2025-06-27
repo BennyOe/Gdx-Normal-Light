@@ -9,16 +9,37 @@ import com.badlogic.gdx.math.Vector2
 
 interface IGameLight {
     fun update()
-    fun remove()
+    fun remove(lightEngine: AbstractLightEngine)
 }
 
 sealed class GameLight(
     open val shaderLight: ShaderLight,
-    open val b2dLight: Light
-) : IGameLight {
+    open val b2dLight: Light,
+    internal val baseIntensity: Float = shaderLight.intensity,
+    internal val baseColor: Color = shaderLight.color,
+    internal val baseDistance: Float = b2dLight.distance,
+
+    ) : IGameLight {
+
+    var effect: LightEffectType? = null
+    val effectParams: LightEffectParameters = LightEffectParameters()
+
+    internal var flickerTimer = 0f
+    internal var elapsedTime = 0f
+    internal val currentTargetColor = baseColor
+    internal var currentTargetIntensity = baseIntensity
 
     abstract override fun update()
-    override fun remove() {}
+    override fun remove(lightEngine: AbstractLightEngine) {
+        lightEngine.removeLight(this)
+    }
+
+    var color: Color
+        get() = shaderLight.color
+        set(value) {
+            shaderLight.color = value
+            b2dLight.color = value
+        }
 
     data class Directional(
         override val shaderLight: ShaderLight.Directional,
@@ -30,12 +51,6 @@ sealed class GameLight(
                 shaderLight.intensity = value
             }
 
-        var color: Color
-            get() = shaderLight.color
-            set(value) {
-                shaderLight.color = value
-                b2dLight.color = value
-            }
 
         var direction: Float
             get() = shaderLight.direction
@@ -53,19 +68,13 @@ sealed class GameLight(
         override val shaderLight: ShaderLight.Point,
         override val b2dLight: PointLight,
         var shaderBalance: Float = 1.0f,
+        var isFlickering: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = shaderLight.position
             set(value) {
                 shaderLight.position = value
                 b2dLight.position = value
-            }
-
-        var color: Color
-            get() = shaderLight.color
-            set(value) {
-                shaderLight.color = value
-                b2dLight.setColor(value)
             }
 
         // --- Independent Properties ---
@@ -85,6 +94,8 @@ sealed class GameLight(
         override fun update() {
             b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
             b2dLight.position = shaderLight.position
+
+            applyLightEffect(this)
         }
     }
 
@@ -92,6 +103,7 @@ sealed class GameLight(
         override val shaderLight: ShaderLight.Spot,
         override val b2dLight: ConeLight,
         var shaderBalance: Float = 1.0f,
+        var isFlickering: Boolean = false,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = shaderLight.position
@@ -106,14 +118,6 @@ sealed class GameLight(
                 shaderLight.directionDegree = value
                 b2dLight.direction = value
             }
-
-        var color: Color
-            get() = shaderLight.color
-            set(value) {
-                shaderLight.color = value
-                b2dLight.setColor(value.r, value.g, value.b, b2dLight.color.a)
-            }
-
 
         // --- Independent Properties ---
         var shaderIntensity: Float
@@ -139,6 +143,8 @@ sealed class GameLight(
         override fun update() {
             b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
             b2dLight.position = shaderLight.position
+
+            applyLightEffect(this)
         }
     }
 }

@@ -14,9 +14,12 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
+import com.github.bennyOe.core.utils.worldToScreenSpace
 import ktx.assets.disposeSafely
-import ktx.math.vec2
 import ktx.math.vec3
+import ktx.math.vec4
+import kotlin.math.cos
+import kotlin.math.sin
 
 abstract class AbstractLightEngine(
     val rayHandler: RayHandler,
@@ -51,6 +54,23 @@ abstract class AbstractLightEngine(
 
         shader.bind()
         shader.setUniformi("u_normals", 1)
+    }
+
+    /**
+     * Adds an existing [GameLight] instance to the light engine.
+     *
+     * This method is useful if you have created a custom light elsewhere (e.g., from another system or serialized state)
+     * and want to register it with the light engine for updates, rendering, and uniform synchronization.
+     *
+     * Unlike the dedicated creation methods ([addPointLight], [addDirectionalLight], [addSpotLight]), this function does
+     * not create a new light but instead integrates a pre-existing one into the engine's rendering and update pipeline.
+     *
+     * Note: The added light must be compatible with the shader and Box2D lighting setup managed by this engine.
+     *
+     * @param light The [GameLight] instance to be managed and rendered by the engine.
+     */
+    fun addLight(light: GameLight){
+        lights.add(light)
     }
 
     /**
@@ -106,9 +126,9 @@ abstract class AbstractLightEngine(
      * @param color The color of the light. The alpha component is multiplied by the intensity.
      * @param shaderIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
      * @param b2dDistance The maximum range of the light. This defines the radius for shadow casting and the falloff calculation.
-     * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @param falloffProfile A value between 0.0 and 1.0 that controls the shape of the light's falloff. 0.0 is more linear, 1.0 is strongly quadratic.
      * @param shaderBalance A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
+     * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @return The created [GameLight.Point] instance, which can be used to modify the light's properties later.
      */
     fun addPointLight(
@@ -246,20 +266,36 @@ abstract class AbstractLightEngine(
     fun update() = lights.forEach { it.update() }
 
     /**
-     * Renders the entire scene with dynamic lighting.
+     * Renders the entire scene with dynamic normal-mapped lighting.
      *
-     * This function orchestrates the main rendering loop. It prepares the custom lighting shader,
-     * draws the game scene using a provided lambda, and then renders the Box2D lights and shadows on top.
+     * This function orchestrates the main rendering pass. It prepares the complex lighting shader,
+     * hands over control to a lambda for drawing the actual game scene, and finally renders the
+     * Box2D lights and shadows on top.
      *
-     * The process is as follows:
-     * 1. The viewport is applied and the screen is cleared.
-     * 2. The custom lighting shader is bound to the SpriteBatch.
-     * 3. All light uniforms (colors, positions, directions, etc.) are set in the shader via `applyShaderUniforms`.
-     * 4. The `drawScene` lambda is executed. This is where you should draw all your game sprites
-     * that will be affected by the dynamic lights. Their normal maps must be bound to texture unit 1.
-     * 5. The Box2D `rayHandler` is updated to render the physical lights and shadows over the scene.
+     * ### What the engine does for you:
+     * - Activates the correct shader for normal-mapped lighting.
+     * - Uploads all light properties (color, position, falloff, etc.) to the shader.
+     * - Manages the final `rayHandler` pass to render shadows.
      *
-     * @param drawScene A lambda function containing the code to draw your game world (e.g., `batch.draw(...)`).
+     * ### What you MUST do inside the `drawScene` lambda:
+     * You have full control and responsibility for drawing your game objects. This means you must:
+     * 1. Bind your normal map texture to **texture unit 1**.
+     * 2. Bind your diffuse (standard color) texture to **texture unit 0**.
+     * 3. Call `batch.draw(...)` for each of your objects.
+     *
+     * @param drawScene A lambda containing the drawing logic for your game world.
+     *
+     * @sample
+     * lightEngine.renderLights {
+     * // IMPORTANT: Bind the normal map to the texture unit the shader expects (1).
+     * wallNormals.bind(1)
+     * wallTexture.bind(0) // Bind the diffuse texture to unit 0.
+     *
+     * // Now, draw your objects as usual.
+     * batch.draw(wallTexture, 0f, 0f, 19f, 9f)
+     *
+     * // You can continue to draw other objects with different textures here...
+     * }
      */
     fun renderLights(drawScene: () -> Unit) {
         viewport.apply()
@@ -278,7 +314,75 @@ abstract class AbstractLightEngine(
         rayHandler.updateAndRender()
     }
 
-    abstract fun applyShaderUniforms()
+    private fun applyShaderUniforms() {
+        val shader = batch.shader ?: return
+        shader.bind()
+        shader.setUniformi("lightCount", shaderLights.size)
+        shader.setUniformf("normalInfluence", normalInfluenceValue)
+        shader.setUniformf("ambient", shaderAmbient)
+
+        val screenX = viewport.screenX.toFloat()
+        val screenY = viewport.screenY.toFloat()
+        val screenW = viewport.screenWidth.toFloat()
+        val screenH = viewport.screenHeight.toFloat()
+
+        shader.setUniformf("u_viewportOffset", screenX, screenY)
+        shader.setUniformf("u_viewportSize", screenW, screenH)
+
+        for (i in shaderLights.indices) {
+            val gameLight = lights[i]
+            val data = lights[i].shaderLight
+            val prefix = "[$i]"
+            shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
+
+            when (data) {
+                is ShaderLight.Directional -> {
+                    shader.setUniformi("lightType$prefix", 0)
+
+                    val dirRad = Math.toRadians(data.direction.toDouble()).toFloat()
+                    val eleRad = Math.toRadians(data.elevation.toDouble()).toFloat()
+
+                    val directionVector = vec3(
+                        cos(dirRad) * cos(eleRad),
+                        sin(dirRad) * cos(eleRad),
+                        sin(eleRad)
+                    ).nor()
+
+                    shader.setUniformf("lightDir$prefix", directionVector)
+                }
+
+                is ShaderLight.Point -> {
+                    shader.setUniformi("lightType$prefix", 1)
+
+                    val pointLight = gameLight as GameLight.Point
+                    val shaderIntensity = data.intensity * pointLight.shaderBalance
+                    shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * shaderIntensity))
+
+                    val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)
+                    shader.setUniformf("lightPos[$i]", screenPos)
+                    shader.setUniformf("falloff$prefix", data.falloff)
+                }
+
+                is ShaderLight.Spot -> {
+                    shader.setUniformi("lightType$prefix", 2)
+
+                    val pointLight = gameLight as GameLight.Spot
+                    val shaderIntensity = data.intensity * pointLight.shaderBalance
+                    shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * shaderIntensity))
+
+                    val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)
+                    shader.setUniformf("lightPos[$i]", screenPos)
+                    shader.setUniformf("falloff$prefix", data.falloff)
+
+                    val rad = Math.toRadians(data.directionDegree.toDouble()).toFloat()
+                    val directionVector = vec3(cos(rad), sin(rad), 0f)
+
+                    shader.setUniformf("lightDir$prefix", directionVector)
+                    shader.setUniformf("coneAngle$prefix", cos(Math.toRadians(data.coneDegree.toDouble() * 0.5)).toFloat())
+                }
+            }
+        }
+    }
 
     open fun resize(width: Int, height: Int) {
         viewport.update(width, height, true)

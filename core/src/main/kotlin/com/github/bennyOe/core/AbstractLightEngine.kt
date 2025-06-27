@@ -98,7 +98,7 @@ abstract class AbstractLightEngine(
                 light.b2dLight.position.x,
                 light.b2dLight.position.y,
                 light.b2dLight.direction,
-                (light.b2dLight as ConeLight).coneDegree / 2
+                (light.b2dLight as ConeLight).coneDegree
             )
         }
         light.b2dLight = newB2dLight

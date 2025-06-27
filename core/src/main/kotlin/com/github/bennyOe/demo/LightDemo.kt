@@ -95,8 +95,7 @@ class LightDemo : AbstractLightDemo() {
             falloffProfile = 1f,
             shaderBalance = 1f,
         )
-
-        pointLight.effect = LightEffectType.FIRE
+        pointLight.effect = LightEffectType.FAULTY_LAMP
 
         spotLight = lightEngine.addSpotLight(
             position = vec2(6f, 5f),
@@ -136,7 +135,13 @@ class LightDemo : AbstractLightDemo() {
         lightEngine.renderLights {
             wallNormals.bind(1)
             wall.bind(0)
-            batch.draw(wall, 0f, 0f, 19f, 9f)
+            batch.draw(wall, 0f, 0f)
+
+            // flush is needed to separate the textures
+            batch.flush()
+            woodNormals.bind(1)
+            wood.bind(0)
+            batch.draw(wood, 9f, 0f, 9f, 19f)
         }
         // Render Box2D debug lines
         debugRenderer.render(world, cam.combined)
@@ -269,6 +274,8 @@ class LightDemo : AbstractLightDemo() {
     override fun dispose() {
         batch.disposeSafely()
         wall.disposeSafely()
+        wallNormals.disposeSafely()
+        wood.disposeSafely()
         wallNormals.disposeSafely()
         lightEngine.dispose()
     }

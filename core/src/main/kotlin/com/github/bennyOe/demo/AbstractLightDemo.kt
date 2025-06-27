@@ -23,6 +23,8 @@ abstract class AbstractLightDemo : KtxScreen {
     protected lateinit var batch: SpriteBatch
     protected lateinit var wall: Texture
     protected lateinit var wallNormals: Texture
+    protected lateinit var wood: Texture
+    protected lateinit var woodNormals: Texture
 
     protected val world = World(vec2(0f, -9.81f), true)
     protected val rayHandler = RayHandler(world)
@@ -34,8 +36,11 @@ abstract class AbstractLightDemo : KtxScreen {
         rayHandler.setBlurNum(6)
         batch = SpriteBatch()
         viewport = ExtendViewport(19f, 9f, cam)
-        wall = Texture("wall.png")
-        wallNormals = Texture("wall_normal.png")
+        wall = Texture("wall2.jpg")
+        wallNormals = Texture("wall2_normal.jpg")
+
+        wood = Texture("wood.jpg")
+        woodNormals = Texture("wood_normal.jpg")
 
         createWalls()
     }
@@ -89,5 +94,7 @@ abstract class AbstractLightDemo : KtxScreen {
         batch.disposeSafely()
         wall.disposeSafely()
         wallNormals.disposeSafely()
+        wood.disposeSafely()
+        woodNormals.disposeSafely()
     }
 }

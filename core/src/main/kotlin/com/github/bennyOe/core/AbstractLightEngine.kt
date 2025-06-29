@@ -37,6 +37,7 @@ abstract class AbstractLightEngine(
     protected val shaderLights get() = lights.take(maxShaderLights)
     protected var normalInfluenceValue: Float = 1f
     protected var lastNormalMap: Texture? = null
+    private val density = Gdx.graphics.backBufferScale
 
 
     init {
@@ -333,10 +334,12 @@ abstract class AbstractLightEngine(
         shader.setUniformf("normalInfluence", normalInfluenceValue)
         shader.setUniformf("ambient", shaderAmbient)
 
-        val screenX = viewport.screenX.toFloat()
-        val screenY = viewport.screenY.toFloat()
-        val screenW = viewport.screenWidth.toFloat()
-        val screenH = viewport.screenHeight.toFloat()
+
+        // Scale the viewport uniforms to match the physical pixel space of gl_FragCoord.
+        val screenX = viewport.screenX * density
+        val screenY = viewport.screenY * density
+        val screenW = viewport.screenWidth * density
+        val screenH = viewport.screenHeight * density
 
         shader.setUniformf("u_viewportOffset", screenX, screenY)
         shader.setUniformf("u_viewportSize", screenW, screenH)

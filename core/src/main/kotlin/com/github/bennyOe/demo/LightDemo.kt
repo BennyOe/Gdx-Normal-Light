@@ -29,6 +29,7 @@ import ktx.math.vec2
  * - 1/2: Switch active light (point/spot)
  * - BACKSPACE: Toggle directional light
  * - SPACE: Toggle diffuse lighting
+ * - N: Toggle normal maps on/off
  * - Q/A: Increase/decrease active light shader intensity
  * - W/S: Increase/decrease active light distance
  * - E/D: Increase/decrease active light shader balance
@@ -65,6 +66,7 @@ class LightDemo : AbstractLightDemo() {
     private var activeLight: GameLight? = null
     private var isDirectionalLightOn = true
     private var yScrollAmount = 0f
+    private var isNormalInfluence: Boolean = true
 
     override fun show() {
         super.show()
@@ -183,6 +185,10 @@ class LightDemo : AbstractLightDemo() {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             RayHandler.useDiffuseLight(!RayHandler.isDiffuse)
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.N)) {
+            if (isNormalInfluence) lightEngine.setNormalInfluence(0f) else lightEngine.setNormalInfluence(1f)
+            isNormalInfluence = !isNormalInfluence
         }
 
         // Always allow control over the directional light

@@ -1,4 +1,4 @@
-# GDX-2D-Light – A Dynamic 2D Lighting Engine for LibGDX
+# GDX-Normal-Light – A Dynamic 2D Lighting Engine for LibGDX
 
 **GDX-2D-Light** is a 2D lighting engine for LibGDX that supports real-time dynamic lighting, normal mapping, and Box2D-based shadows. It is designed for easy integration into various project structures — offering a high-level API for `scene2d` users and a low-level API for ECS-based architectures.
 
@@ -76,7 +76,7 @@ The library is based on two main engine classes depending on your preferred leve
 
 ### 1. Low-Level API (ECS)
 
-#### Step 1: Initialisieren
+#### Step 1: Initialize LightEngine
 
 ```kotlin
 lateinit var lightEngine: LightEngine
@@ -90,7 +90,7 @@ lateinit var batch: SpriteBatch
 rayHandler = RayHandler(world)
 lightEngine = LightEngine(rayHandler, cam, batch, viewport)
 
-// Licht hinzufügen
+// add light
 val pointLight = lightEngine.addPointLight(
     position = Vector2(5f, 5f),
     color = Color.WHITE,
@@ -149,7 +149,7 @@ class NormalMappedActor(
 }
 ```
 
-#### Step 2: Engine & Stage initialisieren
+#### Step 2: Initialize Engine & Stage
 
 ```kotlin
 lateinit var scene2dLightEngine: Scene2dLightEngine

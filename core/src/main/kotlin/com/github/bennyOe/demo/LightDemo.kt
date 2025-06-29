@@ -45,7 +45,7 @@ class LightDemo : AbstractLightDemo() {
     // --- Constants for tweaking controls ---
     companion object {
         private const val LIGHT_INTENSITY_SPEED = 2.5f
-        private const val LIGHT_DISTANCE_SPEED = 2.5f
+        private const val LIGHT_DISTANCE_SPEED = 4.5f
         private const val LIGHT_BALANCE_SPEED = 2.5f
         private const val SPOT_CONE_ANGLE_SPEED = 15f
         private const val SPOT_CONE_ROTATION_SPEED = 55f

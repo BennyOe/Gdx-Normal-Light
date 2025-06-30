@@ -48,7 +48,6 @@ abstract class AbstractLightEngine(
         setupShader()
         RayHandler.useDiffuseLight(useDiffuseLight)
         setShaderAmbientLight(Color(1f, 1f, 1f, 0.2f))
-        batch.shader = shader
     }
 
     private fun setupShader() {
@@ -319,6 +318,7 @@ abstract class AbstractLightEngine(
                     val attenuation = 1f / (1f + dist * dist)
                     (light.shaderLight.intensity * attenuation).toDouble()
                 }
+
                 is GameLight.Spot -> {
                     val shaderLight = light.shaderLight
                     val dist = shaderLight.position.dst(pos)

@@ -39,15 +39,15 @@ abstract class AbstractLightDemo : KtxScreen {
         rayHandler.setBlurNum(6)
         batch = SpriteBatch()
         viewport = ExtendViewport(19f, 9f, cam)
-        wall = Texture("wall2.jpg")
-        wallNormals = Texture("wall2_normal.jpg")
+        wall = Texture("textures/wall2.jpg")
+        wallNormals = Texture("textures/wall2_normal.jpg")
 
-        wood = Texture("wood.jpg")
-        woodNormals = Texture("wood_normal.jpg")
+        wood = Texture("textures/wood.jpg")
+        woodNormals = Texture("textures/wood_normal.jpg")
 
-        plank = Texture("plank.png")
-        plankNormals = Texture("plank_normal.png")
-        plankSpecular = Texture("plank_spec1.png")
+        plank = Texture("textures/plank.png")
+        plankNormals = Texture("textures/plank_normal.png")
+        plankSpecular = Texture("textures/plank_spec.png")
 
         createWalls()
     }

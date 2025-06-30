@@ -299,6 +299,49 @@ abstract class AbstractLightEngine(
         shader.setUniformi("lightCount", lights.size)
     }
 
+
+    /**
+     * Estimates the combined brightness at a given world position based on all point and spotlights.
+     *
+     * This function sums the contributions of all [GameLight.Point] and [GameLight.Spot] lights at the specified position,
+     * using a simple quadratic attenuation model: `attenuation = 1 / (1 + distance^2)`.
+     * For spotlights, the contribution is only added if the point is within the cone angle.
+     * The result is clamped between 0.0 and 1.0.
+     *
+     * @param pos The world position to estimate brightness for.
+     * @return The estimated brightness as a value between 0.0 (dark) and 1.0 (fully lit).
+     */
+    fun estimateBrightness(pos: Vector2): Double {
+        return lights.sumOf { light ->
+            when (light) {
+                is GameLight.Point -> {
+                    val dist = light.shaderLight.position.dst(pos)
+                    val attenuation = 1f / (1f + dist * dist)
+                    (light.shaderLight.intensity * attenuation).toDouble()
+                }
+                is GameLight.Spot -> {
+                    val shaderLight = light.shaderLight
+                    val dist = shaderLight.position.dst(pos)
+
+                    val directionRad = Math.toRadians(shaderLight.directionDegree.toDouble()).toFloat()
+                    val lightDir = Vector2(cos(directionRad), sin(directionRad)).nor()
+                    val toPoint = pos.cpy().sub(shaderLight.position).nor()
+
+                    val dot = lightDir.dot(toPoint)
+                    val coneHalfAngleRad = Math.toRadians(shaderLight.coneDegree.toDouble() * 0.5)
+
+                    if (dot > cos(coneHalfAngleRad)) {
+                        val attenuation = 1f / (1f + dist * dist)
+                        (shaderLight.intensity * attenuation).toDouble()
+                    } else {
+                        0.0
+                    }
+                }
+                else -> 0.0
+            }
+        }.coerceIn(0.0, 1.0)
+    }
+
     /**
      * Removes all dynamic lights from the engine.
      */
@@ -343,10 +386,10 @@ abstract class AbstractLightEngine(
      * - For each light:
      *   - `lightType` — 0 = directional, 1 = point, 2 = spot.
      *   - `lightColor` — light color * intensity.
-     *   - `lightDir` — light direction vector (for directional and spot lights).
-     *   - `lightPos` — light position in screen space (for point and spot lights).
-     *   - `falloff` — attenuation values (for point and spot lights).
-     *   - `coneAngle` — cosine of half cone angle (for spot lights only).
+     *   - `lightDir` — light direction vector (for directional and spotlights).
+     *   - `lightPos` — light position in screen space (for point and spotlights).
+     *   - `falloff` — attenuation values (for point and spotlights).
+     *   - `coneAngle` — cosine of half cone angle (for spotlights only).
      *
      * Notes:
      * - Only the first [maxShaderLights] lights are considered for shader lighting.

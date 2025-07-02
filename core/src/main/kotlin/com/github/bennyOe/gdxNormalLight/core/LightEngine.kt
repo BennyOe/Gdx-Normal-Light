@@ -1,8 +1,6 @@
 package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -16,7 +14,6 @@ class LightEngine(
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 20,
 ) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
-
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -39,18 +36,17 @@ class LightEngine(
     fun renderLights(drawScene: (LightEngine) -> Unit) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
-        batch.shader = shader
+        setShaderToEngineShader()
         applyShaderUniforms()
-        batch.begin()
 
+        batch.begin()
         lastNormalMap = null
         lastSpecularMap = null
         drawScene(this)
-
         batch.end()
-        batch.shader = null
+
+        setShaderToDefaultShader()
 
         rayHandler.setCombinedMatrix(cam)
         rayHandler.updateAndRender()
@@ -71,13 +67,17 @@ class LightEngine(
      * @param y The y-position in world coordinates.
      * @param width The width of the quad to draw.
      * @param height The height of the quad to draw.
+     * @param flipX If true, the sprite is drawn mirrored on the X axis.
      */
     fun draw(
         diffuse: Texture,
         normals: Texture,
         specular: Texture,
-        x: Float, y: Float,
-        width: Float, height: Float,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        flipX: Boolean = false,
     ) {
         if (lastNormalMap == null || normals != lastNormalMap) {
             batch.flush()
@@ -93,7 +93,11 @@ class LightEngine(
         normals.bind(1)
         specular.bind(2)
         diffuse.bind(0)
-        batch.draw(diffuse, x, y, width, height)
+        if (flipX) {
+            batch.draw(diffuse, x + width, y, -width, height)
+        } else {
+            batch.draw(diffuse, x, y, width, height)
+        }
         lastNormalMap = normals
         lastSpecularMap = specular
     }
@@ -112,12 +116,16 @@ class LightEngine(
      * @param y The y-position in world coordinates.
      * @param width The width of the quad to draw.
      * @param height The height of the quad to draw.
+     * @param flipX If true, the sprite is drawn mirrored on the X axis.
      */
     fun draw(
         diffuse: Texture,
         normals: Texture,
-        x: Float, y: Float,
-        width: Float, height: Float,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        flipX: Boolean = false,
     ) {
         if (lastNormalMap == null || normals != lastNormalMap) {
             batch.flush()
@@ -128,13 +136,13 @@ class LightEngine(
 
         normals.bind(1)
         diffuse.bind(0)
-        batch.draw(diffuse, x, y, width, height)
+        if (flipX) {
+            batch.draw(diffuse, x + width, y, -width, height)
+        } else {
+            batch.draw(diffuse, x, y, width, height)
+        }
         lastNormalMap = normals
         lastSpecularMap = null
-    }
-
-    override fun resize(width: Int, height: Int) {
-        super.resize(width, height)
     }
 
     /**
@@ -151,8 +159,16 @@ class LightEngine(
      * @param y The y-position in world coordinates.
      * @param width The width of the quad to draw.
      * @param height The height of the quad to draw.
+     * @param flipX If true, the sprite is drawn mirrored on the X axis.
      */
-    fun draw(diffuse: Texture, x: Float, y: Float, width: Float, height: Float) {
+    fun draw(
+        diffuse: Texture,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        flipX: Boolean = false,
+    ) {
         if (lastNormalMap != null) {
             batch.flush()
         }
@@ -162,9 +178,19 @@ class LightEngine(
         shader.setUniformi("u_useSpecularMap", 0)
 
         diffuse.bind(0)
-        batch.draw(diffuse, x, y, width, height)
+        if (flipX) {
+            batch.draw(diffuse, x + width, y, -width, height)
+        } else {
+            batch.draw(diffuse, x, y, width, height)
+        }
         lastNormalMap = null
         lastSpecularMap = null
     }
 
+    override fun resize(
+        width: Int,
+        height: Int,
+    ) {
+        super.resize(width, height)
+    }
 }

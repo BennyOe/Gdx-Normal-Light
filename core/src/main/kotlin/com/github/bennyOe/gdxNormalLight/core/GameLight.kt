@@ -15,9 +15,7 @@ sealed class GameLight(
     internal val baseIntensity: Float = shaderLight.intensity,
     internal val baseColor: Color = shaderLight.color,
     internal val baseDistance: Float = b2dLight.distance,
-
-    ) : IGameLight {
-
+) : IGameLight {
     var effect: LightEffectType? = null
     val effectParams: LightEffectParameters = LightEffectParameters()
 
@@ -44,7 +42,6 @@ sealed class GameLight(
             set(value) {
                 shaderLight.intensity = value
             }
-
 
         var direction: Float
             get() = shaderLight.direction

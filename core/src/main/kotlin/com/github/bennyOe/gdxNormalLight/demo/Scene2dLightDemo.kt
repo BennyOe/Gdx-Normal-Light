@@ -58,18 +58,18 @@ class Scene2dLightDemo : AbstractLightDemo() {
         pointActor = LightActor(pointLight)
         stage.addActor(pointActor)
 
-        spotLight = lightEngine.addSpotLight(
-            vec2(6f, 5f),
-            Color(0.2f, 0.5f, 1f, 1f),
-            0f,
-            75f,
-            4f,
-            10f,
-            0.5f,
-            2f
-        )
-        spotActor = LightActor(spotLight)
-        stage.addActor(spotActor)
+//        spotLight = lightEngine.addSpotLight(
+//            vec2(6f, 5f),
+//            Color(0.2f, 0.5f, 1f, 1f),
+//            0f,
+//            75f,
+//            4f,
+//            10f,
+//            0.5f,
+//            2f
+//        )
+//        spotActor = LightActor(spotLight)
+//        stage.addActor(spotActor)
 
         val wallActor = Image(wall)
         wallActor.setPosition(0f, 0f)

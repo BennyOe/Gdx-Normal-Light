@@ -43,11 +43,11 @@ abstract class AbstractLightEngine(
     protected var specularRemapMax = 0.5f
     private val density = Gdx.graphics.backBufferScale
 
-
     init {
         setupShader()
         RayHandler.useDiffuseLight(useDiffuseLight)
-        setShaderAmbientLight(Color(1f, 1f, 1f, 0.2f))
+        setShaderAmbientLight(Color(1f, 1f, 1f, 1.0f))
+        rayHandler.setAmbientLight(.1f, .1f, .1f, .1f)
     }
 
     private fun setupShader() {
@@ -61,7 +61,14 @@ abstract class AbstractLightEngine(
         shader.bind()
         shader.setUniformi("u_normals", 1)
         shader.setUniformi("u_specular", 2)
+    }
 
+    fun setShaderToEngineShader() {
+        batch.shader = shader
+    }
+
+    fun setShaderToDefaultShader() {
+        batch.shader = null
     }
 
     /**
@@ -80,35 +87,39 @@ abstract class AbstractLightEngine(
     fun addLight(light: GameLight) {
         if (lights.contains(light)) return
 
-        val newB2dLight = when (light) {
-            is GameLight.Directional -> DirectionalLight(
-                rayHandler,
-                light.b2dLight.rayNum,
-                light.b2dLight.color,
-                light.b2dLight.direction
-            )
+        val newB2dLight =
+            when (light) {
+                is GameLight.Directional ->
+                    DirectionalLight(
+                        rayHandler,
+                        light.b2dLight.rayNum,
+                        light.b2dLight.color,
+                        light.b2dLight.direction,
+                    )
 
-            is GameLight.Point -> PointLight(
-                rayHandler,
-                light.b2dLight.rayNum,
-                light.b2dLight.color,
-                light.b2dLight.distance,
-                light.b2dLight
-                    .position.x,
-                light.b2dLight.position.y
-            )
+                is GameLight.Point ->
+                    PointLight(
+                        rayHandler,
+                        light.b2dLight.rayNum,
+                        light.b2dLight.color,
+                        light.b2dLight.distance,
+                        light.b2dLight
+                            .position.x,
+                        light.b2dLight.position.y,
+                    )
 
-            is GameLight.Spot -> ConeLight(
-                rayHandler,
-                light.b2dLight.rayNum,
-                light.b2dLight.color,
-                light.b2dLight.distance,
-                light.b2dLight.position.x,
-                light.b2dLight.position.y,
-                light.b2dLight.direction,
-                (light.b2dLight as ConeLight).coneDegree
-            )
-        }
+                is GameLight.Spot ->
+                    ConeLight(
+                        rayHandler,
+                        light.b2dLight.rayNum,
+                        light.b2dLight.color,
+                        light.b2dLight.distance,
+                        light.b2dLight.position.x,
+                        light.b2dLight.position.y,
+                        light.b2dLight.direction,
+                        (light.b2dLight as ConeLight).coneDegree,
+                    )
+            }
         light.b2dLight = newB2dLight
 
         lights.add(light)
@@ -119,7 +130,7 @@ abstract class AbstractLightEngine(
      * like the sun, where all light rays are parallel.
      *
      * The light is composed of a [ShaderLight] for visual effects on sprites and a
-     * [box2dLight.DirectionalLight] for interactions within the Box2D world.
+     * [DirectionalLight] for interactions within the Box2D world.
      *
      * @param color The color of the light. The alpha component is multiplied by the intensity.
      * @param direction The direction of the light in degrees, where 0 degrees points to the right (along the positive X-axis).
@@ -134,21 +145,23 @@ abstract class AbstractLightEngine(
         direction: Float,
         shaderIntensity: Float,
         elevation: Float = 1f,
-        rays: Int = 128
+        rays: Int = 128,
     ): GameLight.Directional {
         val correctedDirection = -direction
-        val shaderLight = ShaderLight.Directional(
-            color = color,
-            intensity = shaderIntensity,
-            direction = correctedDirection,
-            elevation = elevation,
-        )
-        val b2dLight = DirectionalLight(
-            rayHandler,
-            rays,
-            color,
-            correctedDirection,
-        )
+        val shaderLight =
+            ShaderLight.Directional(
+                color = color,
+                intensity = shaderIntensity,
+                direction = correctedDirection,
+                elevation = elevation,
+            )
+        val b2dLight =
+            DirectionalLight(
+                rayHandler,
+                rays,
+                color,
+                correctedDirection,
+            )
 
         val gameLight = GameLight.Directional(shaderLight, b2dLight)
 
@@ -161,7 +174,7 @@ abstract class AbstractLightEngine(
      * point in all directions.
      *
      * The light is composed of a [ShaderLight.Point] for visual effects on sprites and a
-     * [box2dLight.PointLight] for interactions within the Box2D world.
+     * [PointLight] for interactions within the Box2D world.
      *
      * @param position The world position of the light source.
      * @param color The color of the light. The alpha component is multiplied by the intensity.
@@ -183,20 +196,22 @@ abstract class AbstractLightEngine(
     ): GameLight.Point {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
 
-        val shaderLight = ShaderLight.Point(
-            color = color,
-            intensity = shaderIntensity,
-            position = position,
-            falloff = falloff,
-        )
-        val b2dLight = PointLight(
-            rayHandler,
-            rays,
-            color,
-            b2dDistance,
-            position.x,
-            position.y
-        )
+        val shaderLight =
+            ShaderLight.Point(
+                color = color,
+                intensity = shaderIntensity,
+                position = position,
+                falloff = falloff,
+            )
+        val b2dLight =
+            PointLight(
+                rayHandler,
+                rays,
+                color,
+                b2dDistance,
+                position.x,
+                position.y,
+            )
 
         val gameLight = GameLight.Point(shaderLight, b2dLight, shaderBalance)
 
@@ -208,7 +223,7 @@ abstract class AbstractLightEngine(
      * Adds a new spotlight to the scene, which emits light in a cone shape from a specific point.
      *
      * The light is composed of a [ShaderLight.Spot] for visual effects on sprites and a
-     * [box2dLight.ConeLight] for interactions within the Box2D world.
+     * [ConeLight] for interactions within the Box2D world.
      *
      * @param position The world position of the light source.
      * @param color The color of the light. The alpha component is multiplied by the intensity.
@@ -234,30 +249,31 @@ abstract class AbstractLightEngine(
     ): GameLight.Spot {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
 
-        val shaderLight = ShaderLight.Spot(
-            color = color,
-            intensity = shaderIntensity,
-            position = position,
-            falloff = falloff,
-            directionDegree = direction,
-            coneDegree = coneDegree,
-        )
-        val b2dLight = ConeLight(
-            rayHandler,
-            rays,
-            color,
-            b2dDistance,
-            position.x,
-            position.y,
-            direction,
-            coneDegree / 2,
-        )
+        val shaderLight =
+            ShaderLight.Spot(
+                color = color,
+                intensity = shaderIntensity,
+                position = position,
+                falloff = falloff,
+                directionDegree = direction,
+                coneDegree = coneDegree,
+            )
+        val b2dLight =
+            ConeLight(
+                rayHandler,
+                rays,
+                color,
+                b2dDistance,
+                position.x,
+                position.y,
+                direction,
+                coneDegree / 2,
+            )
 
         val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderBalance)
 
         lights.add(gameLight)
         return gameLight
-
     }
 
     /**
@@ -282,7 +298,10 @@ abstract class AbstractLightEngine(
      * @param min The gray value in the texture to be treated as black (0.0).
      * @param max The gray value in the texture to be treated as white (1.0).
      */
-    fun setSpecularRemap(min: Float, max: Float) {
+    fun setSpecularRemap(
+        min: Float,
+        max: Float,
+    ) {
         this.specularRemapMin = min
         this.specularRemapMax = max
     }
@@ -298,7 +317,6 @@ abstract class AbstractLightEngine(
         shader.setUniformi("lightCount", lights.size)
     }
 
-
     /**
      * Estimates the combined brightness at a given world position based on all point and spotlights.
      *
@@ -310,37 +328,38 @@ abstract class AbstractLightEngine(
      * @param pos The world position to estimate brightness for.
      * @return The estimated brightness as a value between 0.0 (dark) and 1.0 (fully lit).
      */
-    fun estimateBrightness(pos: Vector2): Double {
-        return lights.sumOf { light ->
-            when (light) {
-                is GameLight.Point -> {
-                    val dist = light.shaderLight.position.dst(pos)
-                    val attenuation = 1f / (1f + dist * dist)
-                    (light.shaderLight.intensity * attenuation).toDouble()
-                }
-
-                is GameLight.Spot -> {
-                    val shaderLight = light.shaderLight
-                    val dist = shaderLight.position.dst(pos)
-
-                    val directionRad = Math.toRadians(shaderLight.directionDegree.toDouble()).toFloat()
-                    val lightDir = Vector2(cos(directionRad), sin(directionRad)).nor()
-                    val toPoint = pos.cpy().sub(shaderLight.position).nor()
-
-                    val dot = lightDir.dot(toPoint)
-                    val coneHalfAngleRad = Math.toRadians(shaderLight.coneDegree.toDouble() * 0.5)
-
-                    if (dot > cos(coneHalfAngleRad)) {
+    fun estimateBrightness(pos: Vector2): Double =
+        lights
+            .sumOf { light ->
+                when (light) {
+                    is GameLight.Point -> {
+                        val dist = light.shaderLight.position.dst(pos)
                         val attenuation = 1f / (1f + dist * dist)
-                        (shaderLight.intensity * attenuation).toDouble()
-                    } else {
-                        0.0
+                        (light.shaderLight.intensity * attenuation).toDouble()
                     }
+
+                    is GameLight.Spot -> {
+                        val shaderLight = light.shaderLight
+                        val dist = shaderLight.position.dst(pos)
+
+                        val directionRad = Math.toRadians(shaderLight.directionDegree.toDouble()).toFloat()
+                        val lightDir = Vector2(cos(directionRad), sin(directionRad)).nor()
+                        val toPoint = pos.cpy().sub(shaderLight.position).nor()
+
+                        val dot = lightDir.dot(toPoint)
+                        val coneHalfAngleRad = Math.toRadians(shaderLight.coneDegree.toDouble() * 0.5)
+
+                        if (dot > cos(coneHalfAngleRad)) {
+                            val attenuation = 1f / (1f + dist * dist)
+                            (shaderLight.intensity * attenuation).toDouble()
+                        } else {
+                            0.0
+                        }
+                    }
+
+                    else -> 0.0
                 }
-                else -> 0.0
-            }
-        }.coerceIn(0.0, 1.0)
-    }
+            }.coerceIn(0.0, 1.0)
 
     /**
      * Removes all dynamic lights from the engine.
@@ -370,7 +389,6 @@ abstract class AbstractLightEngine(
      * are applied before they are rendered.
      */
     fun update() = lights.forEach { it.update() }
-
 
     /**
      * Updates and binds all uniform values required by the lighting shader.
@@ -405,7 +423,6 @@ abstract class AbstractLightEngine(
         shader.setUniformf("u_specularRemapMin", specularRemapMin)
         shader.setUniformf("u_specularRemapMax", specularRemapMax)
 
-
         // Scale the viewport uniforms to match the physical pixel space of gl_FragCoord.
         val screenX = viewport.screenX * density
         val screenY = viewport.screenY * density
@@ -429,11 +446,12 @@ abstract class AbstractLightEngine(
                     val dirRad = Math.toRadians(data.direction.toDouble()).toFloat()
                     val eleRad = Math.toRadians(data.elevation.toDouble()).toFloat()
 
-                    val directionVector = vec3(
-                        cos(dirRad) * cos(eleRad),
-                        sin(dirRad) * cos(eleRad),
-                        sin(eleRad)
-                    ).nor()
+                    val directionVector =
+                        vec3(
+                            cos(dirRad) * cos(eleRad),
+                            sin(dirRad) * cos(eleRad),
+                            sin(eleRad),
+                        ).nor()
 
                     shader.setUniformf("lightDir$prefix", directionVector)
                 }
@@ -471,7 +489,10 @@ abstract class AbstractLightEngine(
         }
     }
 
-    open fun resize(width: Int, height: Int) {
+    open fun resize(
+        width: Int,
+        height: Int,
+    ) {
         viewport.update(width, height, true)
         val scale = Gdx.graphics.backBufferScale
         rayHandler.setCombinedMatrix(cam)
@@ -483,5 +504,4 @@ abstract class AbstractLightEngine(
         rayHandler.disposeSafely()
         shader.disposeSafely()
     }
-
 }

@@ -166,6 +166,11 @@ class Scene2dLightEngine(
     override fun resize(width: Int, height: Int) {
         if (stage == null) return
         stage.viewport.update(width, height, true)
+        val screenX = stage.viewport.screenX
+        val screenY = stage.viewport.screenY
+        val screenW = stage.viewport.screenWidth
+        val screenH = stage.viewport.screenHeight
+        rayHandler.useCustomViewport(screenX, screenY, screenW, screenH)
         super.resize(width, height)
     }
 }

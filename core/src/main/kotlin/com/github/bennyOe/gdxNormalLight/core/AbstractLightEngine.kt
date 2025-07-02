@@ -386,6 +386,16 @@ abstract class AbstractLightEngine(
     }
 
     /**
+     * Sets the ambient light for the scene in box2dLight.
+     * This is the base light color and intensity that affects all objects,
+     * regardless of dynamic lights.
+     * @param ambient The [Color] to use for ambient light. The color's alpha component acts as the intensity.
+     */
+    fun setBox2dLightAmbientLight(ambient: Color) {
+        rayHandler.setAmbientLight(ambient)
+    }
+
+    /**
      * Updates the state of all lights. This method should be called once per frame.
      *
      * It iterates through all [GameLight] instances and synchronizes their properties (like color, position, or distance)

@@ -71,6 +71,10 @@ abstract class AbstractLightEngine(
         batch.shader = null
     }
 
+    fun setDiffuseLight(value: Boolean) {
+        RayHandler.useDiffuseLight(value)
+    }
+
     /**
      * Adds an existing [GameLight] instance to the light engine.
      *

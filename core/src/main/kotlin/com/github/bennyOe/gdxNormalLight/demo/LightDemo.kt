@@ -163,8 +163,8 @@ class LightDemo : AbstractLightDemo() {
     private fun updateActiveLightPosition() {
         val mousePos = viewport.unproject(Vector3(Gdx.input.x.toFloat(), Gdx.input.y.toFloat(), 0f))
         when (val light = activeLight) {
-            is GameLight.Point -> light.position.set(mousePos.x, mousePos.y)
-            is GameLight.Spot -> light.position.set(mousePos.x, mousePos.y)
+            is GameLight.Point -> light.position = vec2(mousePos.x, mousePos.y)
+            is GameLight.Spot -> light.position = vec2(mousePos.x, mousePos.y)
             else -> {}
         }
     }

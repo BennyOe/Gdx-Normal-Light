@@ -27,9 +27,8 @@ sealed class GameLight(
     abstract override fun update()
 
     var color: Color
-        get() = shaderLight.color
+        get() = b2dLight.color
         set(value) {
-            shaderLight.color = value
             b2dLight.color = value
         }
 
@@ -51,7 +50,9 @@ sealed class GameLight(
             }
 
         override fun update() {
-            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
+            applyLightEffect(this)
+            shaderLight.color.set(b2dLight.color)
+            shaderLight.direction = b2dLight.direction
         }
     }
 
@@ -62,9 +63,8 @@ sealed class GameLight(
         var isFlickering: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
-            get() = shaderLight.position
+            get() = b2dLight.position
             set(value) {
-                shaderLight.position = value
                 b2dLight.position = value
             }
 
@@ -83,10 +83,12 @@ sealed class GameLight(
             }
 
         override fun update() {
-            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
-            b2dLight.position = shaderLight.position
-
             applyLightEffect(this)
+            b2dLight.setPosition(b2dLight.position.x, b2dLight.position.y)
+
+            shaderLight.position = b2dLight.position
+            shaderLight.color.set(b2dLight.color)
+            shaderLight.falloff = Falloff.fromDistance(b2dLight.distance).toVector3()
         }
     }
 
@@ -97,16 +99,14 @@ sealed class GameLight(
         var isFlickering: Boolean = false,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
-            get() = shaderLight.position
+            get() = b2dLight.position
             set(value) {
-                shaderLight.position = value
                 b2dLight.position = value
             }
 
         var direction: Float
             get() = shaderLight.directionDegree
             set(value) {
-                shaderLight.directionDegree = value
                 b2dLight.direction = value
             }
 
@@ -121,21 +121,23 @@ sealed class GameLight(
             get() = b2dLight.distance
             set(value) {
                 b2dLight.distance = value
-                shaderLight.falloff = Falloff.fromDistance(value).toVector3()
             }
 
         var coneDegree: Float
-            get() = shaderLight.coneDegree
+            get() = (b2dLight as ConeLight).coneDegree * 2f
             set(value) {
                 shaderLight.coneDegree = value
                 (b2dLight as ConeLight).coneDegree = value / 2f
             }
 
         override fun update() {
-            b2dLight.setColor(shaderLight.color.r, shaderLight.color.g, shaderLight.color.b, b2dLight.color.a)
-            b2dLight.position = shaderLight.position
-
             applyLightEffect(this)
+
+            shaderLight.position = b2dLight.position
+            shaderLight.color.set(b2dLight.color)
+            shaderLight.directionDegree = b2dLight.direction
+            shaderLight.coneDegree = (b2dLight as ConeLight).coneDegree * 2f
+            shaderLight.falloff = Falloff.fromDistance(b2dLight.distance).toVector3()
         }
     }
 }

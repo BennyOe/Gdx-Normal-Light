@@ -1,6 +1,7 @@
 package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -166,10 +167,10 @@ class Scene2dLightEngine(
     override fun resize(width: Int, height: Int) {
         if (stage == null) return
         stage.viewport.update(width, height, true)
-        val screenX = stage.viewport.screenX
-        val screenY = stage.viewport.screenY
-        val screenW = stage.viewport.screenWidth
-        val screenH = stage.viewport.screenHeight
+        val screenX = stage.viewport.screenX * Gdx.graphics.backBufferScale.toInt()
+        val screenY = stage.viewport.screenY * Gdx.graphics.backBufferScale.toInt()
+        val screenW = stage.viewport.screenWidth * Gdx.graphics.backBufferScale.toInt()
+        val screenH = stage.viewport.screenHeight * Gdx.graphics.backBufferScale.toInt()
         rayHandler.useCustomViewport(screenX, screenY, screenW, screenH)
         super.resize(width, height)
     }

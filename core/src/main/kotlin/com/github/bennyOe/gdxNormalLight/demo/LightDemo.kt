@@ -137,8 +137,10 @@ class LightDemo : AbstractLightDemo() {
         lightEngine.update()
 
         lightEngine.renderLights { engine ->
-//            engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
-//            engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
+            // optional textures to toggle
+
+            // engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
+            // engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
             engine.draw(plank, plankNormals, plankSpecular, 0f, 0f, 19f, 19f)
 
         }

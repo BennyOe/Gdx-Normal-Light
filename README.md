@@ -34,6 +34,47 @@ The engine allows you to use dynamic lighting to add depth and atmosphere to you
 
 ---
 
+## Demo Usage
+
+This project includes two demo implementations that show how to use the lighting engine with both the low-level and high-level APIs:
+
+- `LightDemo`: Demonstrates the low-level API (`LightEngine`) for ECS-based projects.
+- `Scene2dLightDemo`: Demonstrates the high-level API (`Scene2dLightEngine`) for `scene2d`-based LibGDX projects.
+
+To run a demo, open the file `GgdxNormalMapExample.kt` and modify the following line to point to the desired demo class:
+
+```kotlin
+addScreen(LightDemo())
+setScreen<LightDemo>()
+// or
+addScreen(Scene2dLightDemo())
+setScreen<Scene2dLightDemo>()
+```
+
+Then you can run the application using:
+
+```bash
+./gradlew run
+```
+## Key Bindings
+
+The following key bindings are supported in the `LightDemo` application:
+
+- `1`, `2`: Switch between point light and spot light
+- `BACKSPACE`: Toggle directional light on/off
+- `SPACE`: Toggle diffuse lighting
+- `N`: Toggle normal map lighting on/off
+- `Q`, `A`: Increase/decrease active light's shader intensity
+- `W`, `S`: Increase/decrease active light's distance
+- `E`, `D`: Increase/decrease active light's shader balance
+- `R`, `F`: Increase/decrease spotlight cone angle (only for spot light)
+- `T`, `G`: Rotate spotlight cone (only for spot light)
+- `I`, `K`: Increase/decrease directional light intensity
+- `O`, `L`: Rotate directional light
+- `Mouse Wheel`: Adjust hue (color) of the active light
+- `Mouse Movement`: Move the active light
+---
+
 ## Dependencies & Setup
 
 - **Language**: Kotlin  

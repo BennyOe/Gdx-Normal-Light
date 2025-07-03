@@ -1,4 +1,4 @@
-package com.github.bennyOe.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color

@@ -1,6 +1,6 @@
-package com.github.bennyOe
+package com.github.bennyOe.gdxNormalLight
 
-import com.github.bennyOe.demo.LightDemo
+import com.github.bennyOe.gdxNormalLight.demo.LightDemo
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync

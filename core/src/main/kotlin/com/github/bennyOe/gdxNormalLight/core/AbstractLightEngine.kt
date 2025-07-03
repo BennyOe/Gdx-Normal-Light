@@ -1,4 +1,4 @@
-package com.github.bennyOe.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.ConeLight
 import box2dLight.DirectionalLight
@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.core.utils.worldToScreenSpace
+import com.github.bennyOe.gdxNormalLight.core.utils.worldToScreenSpace
 import ktx.assets.disposeSafely
 import ktx.math.vec3
 import ktx.math.vec4

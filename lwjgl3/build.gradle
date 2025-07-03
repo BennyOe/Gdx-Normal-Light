@@ -20,7 +20,7 @@ apply plugin: 'org.jetbrains.kotlin.jvm'
 import io.github.fourlastor.construo.Target
 
 sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
-mainClassName = 'com.github.bennyOe.lwjgl3.Lwjgl3Launcher'
+mainClassName = 'com.github.bennyOe.gdxNormalLight.lwjgl3.Lwjgl3Launcher'
 application.setMainClass(mainClassName)
 eclipse.project.name = appName + '-lwjgl3'
 java.sourceCompatibility = 8
@@ -135,7 +135,7 @@ construo {
         architecture.set(Target.Architecture.AARCH64)
         jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.12_7.tar.gz")
         // macOS needs an identifier
-        identifier.set("com.github.bennyOe." + appName)
+        identifier.set("com.github.bennyOe.gdxNormalLight" + appName)
         // Optional: icon for macOS
         macIcon.set(project.file("icons/logo.icns"))
       }
@@ -143,7 +143,7 @@ construo {
         architecture.set(Target.Architecture.X86_64)
         jdkUrl.set("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_x64_mac_hotspot_17.0.12_7.tar.gz")
         // macOS needs an identifier
-        identifier.set("com.github.bennyOe." + appName)
+        identifier.set("com.github.bennyOe.gdxNormalLight" + appName)
         // Optional: icon for macOS
         macIcon.set(project.file("icons/logo.icns"))
       }

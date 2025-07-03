@@ -1,4 +1,4 @@
-package com.github.bennyOe.core.utils
+package com.github.bennyOe.gdxNormalLight.core.utils
 
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector3

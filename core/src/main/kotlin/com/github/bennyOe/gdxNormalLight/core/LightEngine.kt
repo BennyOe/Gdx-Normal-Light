@@ -1,4 +1,4 @@
-package com.github.bennyOe.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx

@@ -1,4 +1,4 @@
-package com.github.bennyOe.demo
+package com.github.bennyOe.gdxNormalLight.demo
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.graphics.OrthographicCamera

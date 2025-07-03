@@ -1,4 +1,4 @@
-package com.github.bennyOe.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.scene2d.NormalMappedActor
+import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
 
 class Scene2dLightEngine(
     rayHandler: RayHandler,

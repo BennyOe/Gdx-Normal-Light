@@ -1,10 +1,10 @@
 @file:JvmName("Lwjgl3Launcher")
 
-package com.github.bennyOe.lwjgl3
+package com.github.bennyOe.gdxNormalLight.lwjgl3
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
-import com.github.bennyOe.GgdxNormalMapExample
+import com.github.bennyOe.gdxNormalLight.GgdxNormalMapExample
 
 /** Launches the desktop (LWJGL3) application. */
 fun main() {

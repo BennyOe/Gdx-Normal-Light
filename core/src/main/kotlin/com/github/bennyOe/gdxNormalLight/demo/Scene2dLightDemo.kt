@@ -1,14 +1,14 @@
-package com.github.bennyOe.demo
+package com.github.bennyOe.gdxNormalLight.demo
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
-import com.github.bennyOe.core.GameLight
-import com.github.bennyOe.core.Scene2dLightEngine
-import com.github.bennyOe.scene2d.LightActor
-import com.github.bennyOe.scene2d.NormalMappedActor
+import com.github.bennyOe.gdxNormalLight.core.GameLight
+import com.github.bennyOe.gdxNormalLight.core.Scene2dLightEngine
+import com.github.bennyOe.gdxNormalLight.scene2d.LightActor
+import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
 import ktx.math.vec2
 
 /**

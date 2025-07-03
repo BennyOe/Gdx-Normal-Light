@@ -1,4 +1,4 @@
-package com.github.bennyOe.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import com.badlogic.gdx.math.Vector3
 import ktx.math.vec3

@@ -1,4 +1,4 @@
-package com.github.bennyOe.scene2d
+package com.github.bennyOe.gdxNormalLight.scene2d
 
 import com.badlogic.gdx.graphics.Texture
 

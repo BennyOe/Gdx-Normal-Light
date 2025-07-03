@@ -1,4 +1,4 @@
-package com.github.bennyOe.demo
+package com.github.bennyOe.gdxNormalLight.demo
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
@@ -6,8 +6,8 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.math.Vector3
-import com.github.bennyOe.core.GameLight
-import com.github.bennyOe.core.LightEngine
+import com.github.bennyOe.gdxNormalLight.core.GameLight
+import com.github.bennyOe.gdxNormalLight.core.LightEngine
 import ktx.assets.disposeSafely
 import ktx.math.vec2
 
@@ -23,7 +23,7 @@ import ktx.math.vec2
  * - Adjust intensity, distance, balance, and cone angle of lights.
  * - Change light color using the mouse wheel.
  * - Move the active light with the mouse cursor.
- * - Add light effects [com.github.bennyOe.core.LightEffectType]
+ * - Add light effects [com.github.bennyOe.gdxNormalLight.core.LightEffectType]
  *
  * Controls:
  * - 1/2: Switch active light (point/spot)

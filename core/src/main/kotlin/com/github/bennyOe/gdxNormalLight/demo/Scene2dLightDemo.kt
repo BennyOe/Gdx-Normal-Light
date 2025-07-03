@@ -6,9 +6,9 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.github.bennyOe.gdxNormalLight.core.GameLight
-import com.github.bennyOe.gdxNormalLight.core.Scene2dLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.LightActor
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
+import io.bennyoe.lightEngine.core.Scene2dLightEngine
 import ktx.math.vec2
 
 /**

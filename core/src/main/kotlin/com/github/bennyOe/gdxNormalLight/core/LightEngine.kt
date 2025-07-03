@@ -85,6 +85,7 @@ class LightEngine(
         shader.bind()
         shader.setUniformi("u_useNormalMap", 1)
         shader.setUniformi("u_useSpecularMap", 1)
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
         if (lastSpecularMap == null || specular != lastSpecularMap) {
             batch.flush()
@@ -133,6 +134,8 @@ class LightEngine(
         shader.bind()
         shader.setUniformi("u_useNormalMap", 1)
         shader.setUniformi("u_useSpecularMap", 0)
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+
 
         normals.bind(1)
         diffuse.bind(0)
@@ -176,6 +179,8 @@ class LightEngine(
         shader.bind()
         shader.setUniformi("u_useNormalMap", 0)
         shader.setUniformi("u_useSpecularMap", 0)
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+
 
         diffuse.bind(0)
         if (flipX) {

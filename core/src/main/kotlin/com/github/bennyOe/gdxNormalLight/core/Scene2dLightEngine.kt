@@ -1,4 +1,4 @@
-package com.github.bennyOe.gdxNormalLight.core
+package io.bennyoe.lightEngine.core
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.viewport.Viewport
+import com.github.bennyOe.gdxNormalLight.core.AbstractLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
 
 class Scene2dLightEngine(
@@ -47,6 +48,8 @@ class Scene2dLightEngine(
         applyShaderUniforms()
 
         batch.begin()
+        lastNormalMap = null
+        lastSpecularMap = null
         drawScene(this)
         batch.end()
 
@@ -82,8 +85,13 @@ class Scene2dLightEngine(
         height: Float,
         flipX: Boolean = false,
     ) {
+        if (lastNormalMap == null || normals.texture != lastNormalMap) {
+            batch.flush()
+        }
         shader.setUniformi("u_useNormalMap", 1)
         shader.setUniformi("u_useSpecularMap", 0)
+
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
         normals.texture.bind(1)
         diffuse.texture.bind(0)
@@ -93,6 +101,60 @@ class Scene2dLightEngine(
         } else {
             batch.draw(diffuse, x, y, width, height)
         }
+        lastNormalMap = normals.texture
+        lastSpecularMap = null
+    }
+
+    /**
+     * Draws a sprite using a diffuse, a normal and a specular map texture, applying normal mapping and specular lighting effects.
+     *
+     * This method binds the normal map to texture unit 1, the specular map to texture unit 2 and the diffuse texture to unit 0, sets the appropriate
+     * shader uniforms, and draws the sprite at the specified position and size. If `flipX` is true, the sprite
+     * is drawn mirrored horizontally.
+     *
+     * Use this method within the [renderLights] lambda to ensure lighting and shader context are active.
+     *
+     * @param diffuse The diffuse [TextureRegion] (base color texture).
+     * @param normals The normal map [TextureRegion] (for lighting effects).
+     * @param specular The specular map [TextureRegion] (for highlight effects).
+     * @param x The x-coordinate to draw the sprite.
+     * @param y The y-coordinate to draw the sprite.
+     * @param width The width of the sprite.
+     * @param height The height of the sprite.
+     * @param flipX If true, the sprite is drawn mirrored on the X axis.
+     */
+    fun draw(
+        diffuse: TextureRegion,
+        normals: TextureRegion,
+        specular: TextureRegion,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        flipX: Boolean = false,
+    ) {
+        if (lastNormalMap == null || normals.texture != lastNormalMap) {
+            batch.flush()
+        }
+        if (lastSpecularMap == null || specular.texture != lastSpecularMap) {
+            batch.flush()
+        }
+        shader.setUniformi("u_useNormalMap", 1)
+        shader.setUniformi("u_useSpecularMap", 1)
+
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+
+        normals.texture.bind(1)
+        specular.texture.bind(2)
+        diffuse.texture.bind(0)
+
+        if (flipX) {
+            batch.draw(diffuse, x + width, y, -width, height)
+        } else {
+            batch.draw(diffuse, x, y, width, height)
+        }
+        lastNormalMap = normals.texture
+        lastSpecularMap = specular.texture
     }
 
     /**
@@ -115,7 +177,6 @@ class Scene2dLightEngine(
         batch.shader = this.shader
         shader.bind()
         shader.setUniformi("u_useNormalMap", 0)
-
         // Draw the image normally
         image.draw(batch, 1f)
 
@@ -137,34 +198,46 @@ class Scene2dLightEngine(
      * @param actor The [Actor] to render. May or may not have an associated normal map.
      */
     fun draw(actor: Actor) {
+        // Determine if the actor is flipped horizontally.
+        val flipX = actor.scaleX < 0
+
+        shader.bind()
+        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+
         if (actor is NormalMappedActor) {
             if (lastNormalMap == null || lastNormalMap != actor.normalMapTexture) {
                 batch.flush()
             }
 
-            actor.normalMapTexture?.let {
-                it.bind(1)
-                shader.bind()
-                shader.setUniformi("u_useNormalMap", 1)
-                lastNormalMap = actor.normalMapTexture
-            }
-            actor.specularTexture?.let {
-                shader.bind()
-                shader.setUniformi("u_useSpecularMap", 1)
-                it.bind(2)
-                lastSpecularMap = actor.specularTexture
-            }
+            shader.setUniformi("u_useNormalMap", if (actor.normalMapTexture != null) 1 else 0)
+            shader.setUniformi("u_useSpecularMap", if (actor.specularTexture != null) 1 else 0)
+
+            actor.normalMapTexture?.bind(1)
+            lastNormalMap = actor.normalMapTexture
+
+            actor.specularTexture?.bind(2)
+            lastSpecularMap = actor.specularTexture
+
             actor.diffuseTexture.bind(0)
             batch.draw(actor.diffuseTexture, actor.x, actor.y, actor.width, actor.height)
         } else {
-            setShaderToDefaultShader()
+            if (lastNormalMap != null || lastSpecularMap != null) {
+                batch.flush()
+            }
+            shader.setUniformi("u_useNormalMap", 0)
+            shader.setUniformi("u_useSpecularMap", 0)
+
             actor.draw(batch, 1.0f)
+
             lastNormalMap = null
             lastSpecularMap = null
         }
     }
 
-    override fun resize(width: Int, height: Int) {
+    override fun resize(
+        width: Int,
+        height: Int,
+    ) {
         if (stage == null) return
         stage.viewport.update(width, height, true)
         val screenX = stage.viewport.screenX * Gdx.graphics.backBufferScale.toInt()

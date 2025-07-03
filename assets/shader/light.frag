@@ -12,6 +12,9 @@ precision mediump float;
 varying LOWP vec4 v_color;   // Vertex color, usually white unless tinted.
 varying vec2 v_texCoord;     // Texture coordinates (UVs) for the current fragment.
 
+// Whether to flip the texture horizontally (mirrors the image on the X axis).
+uniform bool u_flipX;
+
 // Uniforms are variables that are constant for all fragments in a single draw call.
 uniform sampler2D u_texture;       // Diffuse texture (unit 0)
 uniform sampler2D u_normals;       // Normal map texture (unit 1)
@@ -58,6 +61,11 @@ void main() {
         // Texture values are in the 0-1 range, so map them to the -1 to 1 range.
         vec3 normalMap = texture2D(u_normals, v_texCoord).rgb;
         n = normalize(normalMap * 2.0 - 1.0);
+
+        // Flip the normal's x-component if the sprite is flipped.
+        if (u_flipX) {
+            n.x = -n.x;
+        }
     } else {
         // Fallback to a default normal if no normal map is used.
         n = vec3(0.0, 0.0, 1.0); // Default normal pointing out of the screen.

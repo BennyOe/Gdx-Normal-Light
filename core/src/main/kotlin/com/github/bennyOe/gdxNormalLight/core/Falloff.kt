@@ -3,7 +3,11 @@ package com.github.bennyOe.gdxNormalLight.core
 import com.badlogic.gdx.math.Vector3
 import ktx.math.vec3
 
-data class Falloff(val constant: Float, val linear: Float, val quadratic: Float) {
+data class Falloff(
+    val constant: Float,
+    val linear: Float,
+    val quadratic: Float,
+) {
     fun toVector3(): Vector3 = vec3(constant, linear, quadratic)
 
     companion object {
@@ -14,7 +18,10 @@ data class Falloff(val constant: Float, val linear: Float, val quadratic: Float)
          * @param profile A parameter (from 0.0 to 1.0) controlling the shape of the falloff curve.
          *                0.0 = more linear, 1.0 = more quadratic.
          */
-        fun fromDistance(distance: Float, profile: Float = 0.5f): Falloff {
+        fun fromDistance(
+            distance: Float,
+            profile: Float = 0.5f,
+        ): Falloff {
             if (distance <= 0f) return Falloff(1f, 0f, 0f)
 
             val constant = 1.0f
@@ -27,6 +34,7 @@ data class Falloff(val constant: Float, val linear: Float, val quadratic: Float)
 
             return Falloff(constant, linear, quadratic)
         }
+
         val DEFAULT = fromDistance(30f) // default value with a middle distance
     }
 }

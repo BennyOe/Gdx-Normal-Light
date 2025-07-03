@@ -14,6 +14,9 @@ The engine allows you to use dynamic lighting to add depth and atmosphere to you
 - **Normal Mapping**  
   Add surface detail and depth to your 2D sprites using normal maps.
 
+- **Specular Mapping**  
+  Add material properties to your sprites, allowing for shiny surfaces and highlights.
+- 
 - **Multiple Light Types**  
   - **Point Lights**: Emit light in all directions from a single point, with configurable falloff.  
   - **Spot Lights**: Emit light in a cone, perfect for flashlights or focused effects.  
@@ -33,6 +36,11 @@ The engine allows you to use dynamic lighting to add depth and atmosphere to you
   Use a single "uber-shader" that can render objects with normal maps or with simple, flat lighting, allowing you to mix and match lit and unlit sprites in the same render pass.
 
 ---
+
+## Limitations
+
+- **Desktop Only**  
+  The engine is currently designed for desktop platforms and may not perform well on mobile devices due to the complexity of per-pixel lighting calculations.
 
 ## Demo Usage
 
@@ -71,6 +79,7 @@ The following key bindings are supported in the `LightDemo` application:
 - `T`, `G`: Rotate spotlight cone (only for spot light)
 - `I`, `K`: Increase/decrease directional light intensity
 - `O`, `L`: Rotate directional light
+- `Y`, `H`: Increase/decrease specular intensity
 - `Mouse Wheel`: Adjust hue (color) of the active light
 - `Mouse Movement`: Move the active light
 ---
@@ -79,6 +88,8 @@ The following key bindings are supported in the `LightDemo` application:
 
 - **Language**: Kotlin  
 - **Dependencies**: LibGDX, Box2D, Box2DLights  
+- **Based on**: The great work of https://gist.github.com/mattdesl/4653464
+- **Thanks to**: Quillraven for the inspiring tutorials https://github.com/Quillraven , [YouTube](https://www.youtube.com/@Quillraven)
 - **Optional**: LibKTX (used in the demo, but not required)
 
 ### Gradle

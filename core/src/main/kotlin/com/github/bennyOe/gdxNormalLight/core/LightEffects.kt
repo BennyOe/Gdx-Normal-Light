@@ -10,7 +10,7 @@ enum class LightEffectType {
     PULSE,
     FAULTY_LAMP,
     LIGHTNING,
-    COLOR_CYCLE
+    COLOR_CYCLE,
 }
 
 data class LightEffectParameters(
@@ -44,7 +44,10 @@ fun applyLightEffect(light: GameLight) {
     }
 }
 
-private fun fire(light: GameLight, intensity: Float) {
+private fun fire(
+    light: GameLight,
+    intensity: Float,
+) {
     val delta = Gdx.graphics.deltaTime
     light.flickerTimer -= delta
 
@@ -52,7 +55,8 @@ private fun fire(light: GameLight, intensity: Float) {
         light.flickerTimer = (Math.random() * 0.12f + 0.08f).toFloat()
 
         val intensityVariation = (Math.random().toFloat() - 0.5f) * intensity * 0.5f
-        light.currentTargetIntensity = (light.baseIntensity + intensityVariation).coerceIn(light.baseIntensity * 0.7f, light.baseIntensity * 1.3f)
+        light.currentTargetIntensity =
+            (light.baseIntensity + intensityVariation).coerceIn(light.baseIntensity * 0.7f, light.baseIntensity * 1.3f)
 
         val rVariation = (Math.random().toFloat() - 0.5f) * 0.2f * intensity
         val newR = (light.baseColor.r + rVariation).coerceIn(0.8f, 1.0f)
@@ -73,7 +77,12 @@ private fun fire(light: GameLight, intensity: Float) {
     light.b2dLight.distance = light.baseDistance + (light.shaderLight.intensity - light.baseIntensity)
 }
 
-private fun pulse(light: GameLight, pulseSpeed: Float, minIntensity: Float, maxIntensity: Float) {
+private fun pulse(
+    light: GameLight,
+    pulseSpeed: Float,
+    minIntensity: Float,
+    maxIntensity: Float,
+) {
     light.elapsedTime += Gdx.graphics.deltaTime
     val sinValue = sin(light.elapsedTime * pulseSpeed)
     val normalizedValue = (sinValue + 1f) / 2f
@@ -82,7 +91,10 @@ private fun pulse(light: GameLight, pulseSpeed: Float, minIntensity: Float, maxI
     light.b2dLight.distance = light.baseDistance * targetIntensity
 }
 
-private fun faultyLamp(light: GameLight, chanceToFlicker: Float) {
+private fun faultyLamp(
+    light: GameLight,
+    chanceToFlicker: Float,
+) {
     if (Math.random() < chanceToFlicker) {
         light.shaderLight.intensity = light.baseIntensity * (1f + (Math.random() * 0.5f).toFloat())
         light.shaderLight.color.set(light.baseColor.r, light.baseColor.g, light.baseColor.b, 1f)
@@ -94,7 +106,11 @@ private fun faultyLamp(light: GameLight, chanceToFlicker: Float) {
     light.b2dLight.setColor(light.shaderLight.color)
 }
 
-private fun lightning(light: GameLight, minDelay: Float, maxDelay: Float) {
+private fun lightning(
+    light: GameLight,
+    minDelay: Float,
+    maxDelay: Float,
+) {
     light.flickerTimer -= Gdx.graphics.deltaTime
     if (light.flickerTimer > 0.1f) {
         light.shaderLight.intensity = 0f
@@ -108,7 +124,10 @@ private fun lightning(light: GameLight, minDelay: Float, maxDelay: Float) {
     light.b2dLight.setColor(light.shaderLight.color)
 }
 
-private fun colorCycle(light: GameLight, cycleSpeed: Float) {
+private fun colorCycle(
+    light: GameLight,
+    cycleSpeed: Float,
+) {
     light.elapsedTime += Gdx.graphics.deltaTime
     val hue = (light.elapsedTime * cycleSpeed) % 360f
     light.shaderLight.color.fromHsv(hue, 1.0f, 1.0f)

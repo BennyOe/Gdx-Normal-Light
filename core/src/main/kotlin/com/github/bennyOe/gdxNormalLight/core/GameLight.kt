@@ -59,8 +59,7 @@ sealed class GameLight(
     data class Point(
         override val shaderLight: ShaderLight.Point,
         override var b2dLight: Light,
-        var shaderBalance: Float = 1.0f,
-        var isFlickering: Boolean = true,
+        var shaderIntensityMultiplier: Float = 1.0f,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = b2dLight.position
@@ -95,8 +94,7 @@ sealed class GameLight(
     data class Spot(
         override val shaderLight: ShaderLight.Spot,
         override var b2dLight: Light,
-        var shaderBalance: Float = 1.0f,
-        var isFlickering: Boolean = false,
+        var shaderIntensityMultiplier: Float = 1.0f,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = b2dLight.position

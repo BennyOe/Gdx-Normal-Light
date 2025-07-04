@@ -68,7 +68,9 @@ val lightEngine = LightEngine(rayHandler, cam, batch, viewport)
 val pointLight = lightEngine.addPointLight(
     position = Vector2(5f, 5f),
     color = Color(1f, 0.5f, 0.2f, 1f),
-    b2dDistance = 15f
+    initialIntensity = 10f, // Base intensity for the light
+    b2dDistance = 15f,      // Range for Box2D shadow casting
+    shaderIntensityMultiplier = 0.8f // Fine-tune the visual brightness in the shader
 )
 pointLight.effect = LightEffectType.FIRE
 ```
@@ -153,22 +155,22 @@ Then execute:
 
 ## ⌨️ Key Bindings (Demo)
 
-| Key           | Action                                      |
-|---------------|---------------------------------------------|
-| `1`, `2`      | Switch between Point and Spot lights        |
-| `BACKSPACE`   | Toggle directional light                    |
-| `SPACE`       | Toggle diffuse lighting                     |
-| `N`           | Toggle normal map lighting                  |
-| `Q` / `A`     | Increase / decrease shader intensity        |
-| `W` / `S`     | Increase / decrease light distance          |
-| `E` / `D`     | Adjust shader balance                       |
-| `R` / `F`     | Adjust spot cone angle                      |
-| `T` / `G`     | Rotate spotlight cone                       |
-| `I` / `K`     | Adjust directional light intensity          |
-| `O` / `L`     | Rotate directional light                    |
-| `Y` / `H`     | Adjust specular intensity                   |
-| Mouse Wheel   | Change light hue                            |
-| Mouse Move    | Move active light                           |
+| Key           | Action                               |
+|---------------|--------------------------------------|
+| `1`, `2`      | Switch between Point and Spot lights |
+| `BACKSPACE`   | Toggle directional light             |
+| `SPACE`       | Toggle diffuse lighting              |
+| `N`           | Toggle normal map lighting           |
+| `Q` / `A`     | Increase / decrease shader intensity |
+| `W` / `S`     | Increase / decrease light distance   |
+| `E` / `D`     | Adjust shader intensity multiplier   |
+| `R` / `F`     | Adjust spot cone angle               |
+| `T` / `G`     | Rotate spotlight cone                |
+| `I` / `K`     | Adjust directional light intensity   |
+| `O` / `L`     | Rotate directional light             |
+| `Y` / `H`     | Adjust specular intensity            |
+| Mouse Wheel   | Change light hue                     |
+| Mouse Move    | Move active light                    |
 
 ---
 

@@ -32,7 +32,7 @@ abstract class AbstractLightEngine(
     protected val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     protected val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")
     protected lateinit var shader: ShaderProgram
-    protected lateinit var shaderAmbient: Color
+    protected lateinit var shaderAmbientColor: Color
     protected val lights = mutableListOf<GameLight>()
     protected val shaderLights get() = lights.take(maxShaderLights)
     protected var normalInfluenceValue: Float = 1f
@@ -46,7 +46,7 @@ abstract class AbstractLightEngine(
     init {
         setupShader()
         RayHandler.useDiffuseLight(useDiffuseLight)
-        setShaderAmbientLight(Color(1f, 1f, 1f, 1.0f))
+        updateShaderAmbientColor(Color(1f, 1f, 1f, 1.0f))
         rayHandler.setAmbientLight(.1f, .1f, .1f, .1f)
     }
 
@@ -138,7 +138,7 @@ abstract class AbstractLightEngine(
      *
      * @param color The color of the light. The alpha component is multiplied by the intensity.
      * @param direction The direction of the light in degrees, where 0 degrees points to the right (along the positive X-axis).
-     * @param shaderIntensity The brightness of the light. This value is multiplied with the color's alpha component.
+     * @param initialIntensity The brightness of the light. This value is multiplied with the color's alpha component.
      * @param elevation The elevation of the light source in degrees. An elevation of 0 means the light is parallel to the XY plane.
      * An elevation of 90 degrees would mean the light shines straight down from the Z-axis. This is used to calculate the 3D light vector for the shader.
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
@@ -147,7 +147,7 @@ abstract class AbstractLightEngine(
     fun addDirectionalLight(
         color: Color,
         direction: Float,
-        shaderIntensity: Float,
+        initialIntensity: Float,
         elevation: Float = 1f,
         rays: Int = 128,
     ): GameLight.Directional {
@@ -155,7 +155,7 @@ abstract class AbstractLightEngine(
         val shaderLight =
             ShaderLight.Directional(
                 color = color,
-                intensity = shaderIntensity,
+                intensity = initialIntensity,
                 direction = correctedDirection,
                 elevation = elevation,
             )
@@ -182,20 +182,20 @@ abstract class AbstractLightEngine(
      *
      * @param position The world position of the light source.
      * @param color The color of the light. The alpha component is multiplied by the intensity.
-     * @param shaderIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
+     * @param initialIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
      * @param b2dDistance The maximum range of the light. This defines the radius for shadow casting and the falloff calculation.
      * @param falloffProfile A value between 0.0 and 1.0 that controls the shape of the light's falloff. 0.0 is more linear, 1.0 is strongly quadratic.
-     * @param shaderBalance A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
+     * @param shaderIntensityMultiplier A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @return The created [GameLight.Point] instance, which can be used to modify the light's properties later.
      */
     fun addPointLight(
         position: Vector2,
         color: Color,
-        shaderIntensity: Float = 1f,
+        initialIntensity: Float = 1f,
         b2dDistance: Float = 1f,
         falloffProfile: Float = 0.5f,
-        shaderBalance: Float = 0.5f,
+        shaderIntensityMultiplier: Float = 0.5f,
         rays: Int = 128,
     ): GameLight.Point {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
@@ -203,7 +203,7 @@ abstract class AbstractLightEngine(
         val shaderLight =
             ShaderLight.Point(
                 color = color,
-                intensity = shaderIntensity,
+                intensity = initialIntensity,
                 position = position,
                 falloff = falloff,
             )
@@ -217,7 +217,7 @@ abstract class AbstractLightEngine(
                 position.y,
             )
 
-        val gameLight = GameLight.Point(shaderLight, b2dLight, shaderBalance)
+        val gameLight = GameLight.Point(shaderLight, b2dLight, shaderIntensityMultiplier)
 
         lights.add(gameLight)
         return gameLight
@@ -233,10 +233,10 @@ abstract class AbstractLightEngine(
      * @param color The color of the light. The alpha component is multiplied by the intensity.
      * @param direction The direction the light is pointing in degrees (e.g., 0 is right, 90 is up).
      * @param coneDegree The **full** angle of the light cone in degrees. A value of 60 creates a 60-degree wide cone.
-     * @param shaderIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
+     * @param initialIntensity The base intensity of the light, affecting both the visual shader and the b2dLight.
      * @param b2dDistance The maximum range of the light. This defines the radius for shadow casting and the falloff calculation.
      * @param falloffProfile A value between 0.0 and 1.0 that controls the shape of the light's falloff. 0.0 is more linear, 1.0 is strongly quadratic.
-     * @param shaderBalance A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
+     * @param shaderIntensityMultiplier A multiplier to fine-tune the visual intensity of the shader light relative to the b2dLight's base intensity.
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @return The created [GameLight.Spot] instance, which can be used to modify the light's properties later.
      */
@@ -245,10 +245,10 @@ abstract class AbstractLightEngine(
         color: Color,
         direction: Float,
         coneDegree: Float,
-        shaderIntensity: Float = 1f,
+        initialIntensity: Float = 1f,
         b2dDistance: Float = 1f,
         falloffProfile: Float = 0f,
-        shaderBalance: Float = 0.5f,
+        shaderIntensityMultiplier: Float = 0.5f,
         rays: Int = 128,
     ): GameLight.Spot {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
@@ -256,7 +256,7 @@ abstract class AbstractLightEngine(
         val shaderLight =
             ShaderLight.Spot(
                 color = color,
-                intensity = shaderIntensity,
+                intensity = initialIntensity,
                 position = position,
                 falloff = falloff,
                 directionDegree = direction,
@@ -274,7 +274,7 @@ abstract class AbstractLightEngine(
                 coneDegree / 2,
             )
 
-        val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderBalance)
+        val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderIntensityMultiplier)
 
         lights.add(gameLight)
         return gameLight
@@ -381,8 +381,8 @@ abstract class AbstractLightEngine(
      * regardless of dynamic lights.
      * @param ambient The [Color] to use for ambient light. The color's alpha component acts as the intensity.
      */
-    fun setShaderAmbientLight(ambient: Color) {
-        shaderAmbient = ambient
+    fun updateShaderAmbientColor(ambient: Color) {
+        shaderAmbientColor = ambient
     }
 
     /**
@@ -391,7 +391,7 @@ abstract class AbstractLightEngine(
      * regardless of dynamic lights.
      * @param ambient The [Color] to use for ambient light. The color's alpha component acts as the intensity.
      */
-    fun setBox2dLightAmbientLight(ambient: Color) {
+    fun setBox2dAmbientLight(ambient: Color) {
         rayHandler.setAmbientLight(ambient)
     }
 
@@ -432,7 +432,7 @@ abstract class AbstractLightEngine(
         shader.bind()
         shader.setUniformi("lightCount", shaderLights.size)
         shader.setUniformf("normalInfluence", normalInfluenceValue)
-        shader.setUniformf("ambient", shaderAmbient)
+        shader.setUniformf("ambient", shaderAmbientColor)
         shader.setUniformf("u_specularIntensity", specularIntensityValue)
         shader.setUniformf("u_specularRemapMin", specularRemapMin)
         shader.setUniformf("u_specularRemapMax", specularRemapMax)
@@ -474,7 +474,7 @@ abstract class AbstractLightEngine(
                     shader.setUniformi("lightType$prefix", 1)
 
                     val pointLight = gameLight as GameLight.Point
-                    val shaderIntensity = data.intensity * pointLight.shaderBalance
+                    val shaderIntensity = data.intensity * pointLight.shaderIntensityMultiplier
                     shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * shaderIntensity))
 
                     val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)
@@ -486,7 +486,7 @@ abstract class AbstractLightEngine(
                     shader.setUniformi("lightType$prefix", 2)
 
                     val pointLight = gameLight as GameLight.Spot
-                    val shaderIntensity = data.intensity * pointLight.shaderBalance
+                    val shaderIntensity = data.intensity * pointLight.shaderIntensityMultiplier
                     shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * shaderIntensity))
 
                     val screenPos = worldToScreenSpace(vec3(data.position.x, data.position.y, 0f), cam, viewport)

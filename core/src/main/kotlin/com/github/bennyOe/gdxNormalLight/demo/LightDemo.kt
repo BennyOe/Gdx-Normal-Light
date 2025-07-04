@@ -87,17 +87,17 @@ class LightDemo : AbstractLightDemo() {
         directionalLight = lightEngine.addDirectionalLight(
             color = Color(0.8f, 0.8f, 1f, 0.45f),
             direction = -45f,
-            shaderIntensity = 2.8f,
+            initialIntensity = 2.8f,
             elevation = 40f
         )
 
         pointLight = lightEngine.addPointLight(
             position = vec2(6f, 6f),
             color = Color(1f, 0.5f, 0.2f, 1f),
-            shaderIntensity = 2f,
+            initialIntensity = 2f,
             b2dDistance = 7f,
             falloffProfile = 1f,
-            shaderBalance = 1f,
+            shaderIntensityMultiplier = 1f,
         )
 
         spotLight = lightEngine.addSpotLight(
@@ -105,17 +105,17 @@ class LightDemo : AbstractLightDemo() {
             color = Color(0.2f, 0.5f, 1f, 1f),
             direction = 0f,
             coneDegree = 75f,
-            shaderIntensity = 4f,
+            initialIntensity = 4f,
             b2dDistance = 10f,
             falloffProfile = 0.5f,
-            shaderBalance = 2f,
+            shaderIntensityMultiplier = 2f,
         )
 
         // --- Initial Scene Setup ---
         lightEngine.removeLight(spotLight) // Start with the spotlight disabled
         activeLight = pointLight          // Point light is active by default
 
-        lightEngine.setNormalInfluence(0.8f)
+        lightEngine.setNormalInfluence(1f)
         lightEngine.setSpecularRemap(0.3f, 0.7f)
         lightEngine.setSpecularIntensity(specularIntensity)
     }
@@ -234,8 +234,8 @@ class LightDemo : AbstractLightDemo() {
                 if (Gdx.input.isKeyPressed(Input.Keys.A)) light.shaderIntensity -= intensitySpeed
                 if (Gdx.input.isKeyPressed(Input.Keys.W)) light.distance += distanceSpeed
                 if (Gdx.input.isKeyPressed(Input.Keys.S)) light.distance -= distanceSpeed
-                if (Gdx.input.isKeyPressed(Input.Keys.E)) light.shaderBalance += balanceSpeed
-                if (Gdx.input.isKeyPressed(Input.Keys.D)) light.shaderBalance -= balanceSpeed
+                if (Gdx.input.isKeyPressed(Input.Keys.E)) light.shaderIntensityMultiplier += balanceSpeed
+                if (Gdx.input.isKeyPressed(Input.Keys.D)) light.shaderIntensityMultiplier -= balanceSpeed
             }
 
             is GameLight.Spot -> {
@@ -243,8 +243,8 @@ class LightDemo : AbstractLightDemo() {
                 if (Gdx.input.isKeyPressed(Input.Keys.A)) light.shaderIntensity -= intensitySpeed
                 if (Gdx.input.isKeyPressed(Input.Keys.W)) light.distance += distanceSpeed
                 if (Gdx.input.isKeyPressed(Input.Keys.S)) light.distance -= distanceSpeed
-                if (Gdx.input.isKeyPressed(Input.Keys.E)) light.shaderBalance += balanceSpeed
-                if (Gdx.input.isKeyPressed(Input.Keys.D)) light.shaderBalance -= balanceSpeed
+                if (Gdx.input.isKeyPressed(Input.Keys.E)) light.shaderIntensityMultiplier += balanceSpeed
+                if (Gdx.input.isKeyPressed(Input.Keys.D)) light.shaderIntensityMultiplier -= balanceSpeed
 
                 // --- Spot light specific controls ---
                 val coneSpeed = SPOT_CONE_ANGLE_SPEED * delta

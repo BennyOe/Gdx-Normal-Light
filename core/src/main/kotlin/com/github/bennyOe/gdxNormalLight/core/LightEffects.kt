@@ -1,5 +1,6 @@
 package com.github.bennyOe.gdxNormalLight.core
 
+import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import kotlin.math.sin
@@ -94,6 +95,11 @@ private fun pulse(
 private fun faultyLamp(
     light: GameLight,
     chanceToFlicker: Float,
+) = if (RayHandler.isDiffuse) faultyLampDiffuse(light, chanceToFlicker) else faultyLampNoDiffuse(light, chanceToFlicker)
+
+private fun faultyLampNoDiffuse(
+    light: GameLight,
+    chanceToFlicker: Float,
 ) {
     if (Math.random() < chanceToFlicker) {
         light.shaderLight.intensity = light.baseIntensity * (1f + (Math.random() * 0.5f).toFloat())
@@ -104,6 +110,21 @@ private fun faultyLamp(
     }
     light.b2dLight.distance = light.baseDistance * light.shaderLight.intensity
     light.b2dLight.setColor(light.shaderLight.color)
+}
+
+private fun faultyLampDiffuse(
+    light: GameLight,
+    chanceToFlicker: Float,
+) {
+    if (Math.random() < chanceToFlicker) {
+        // Fully ON
+        light.shaderLight.intensity = light.baseIntensity
+        light.b2dLight.distance = light.baseDistance
+    } else {
+        // Fully OFF
+        light.shaderLight.intensity = 0f
+        light.b2dLight.distance = 0f
+    }
 }
 
 private fun lightning(

@@ -36,6 +36,18 @@ A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighti
 - **Flexible API Design**  
   - `LightEngine`: Low-level, ECS-compatible engine.  
   - `Scene2dLightEngine`: High-level, plug-and-play engine for scene2d users.
+ 
+## 🎮 Demo
+
+### 🔸 Point Light Effect  
+
+![Point Light Demo](https://github.com/user-attachments/assets/d5b5b969-47a9-4c21-84cd-7a42be94af94)
+
+---
+
+### 🔸 Spot Light Effect  
+
+![Spot Light Demo](https://github.com/user-attachments/assets/db9a0057-a742-4b1e-8826-a9ad9786d7e1)
 
 ---
 

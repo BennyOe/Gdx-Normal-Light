@@ -27,7 +27,7 @@ abstract class AbstractLightEngine(
     val batch: SpriteBatch,
     val viewport: Viewport,
     val useDiffuseLight: Boolean,
-    val maxShaderLights: Int = 20,
+    val maxShaderLights: Int = 32,
 ) {
     protected val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     protected val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")

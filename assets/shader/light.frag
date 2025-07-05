@@ -8,6 +8,8 @@ precision mediump float;
 #define LOWP
 #endif
 
+#define MAX_LIGHTS 32          // The maximum number of lights the shader can process.
+
 // Varyings are passed from the vertex to the fragment shader and are interpolated per-fragment.
 varying LOWP vec4 v_color;   // Vertex color, usually white unless tinted.
 varying vec2 v_texCoord;     // Texture coordinates (UVs) for the current fragment.
@@ -32,8 +34,6 @@ uniform vec4 ambient;         // Ambient light color (rgb) and intensity (a).
 // Specular remap values to adjust the specular map's range.
 uniform float u_specularRemapMin;
 uniform float u_specularRemapMax;
-
-#define MAX_LIGHTS 8          // The maximum number of lights the shader can process.
 
 uniform int lightCount;       // The actual number of active lights.
 

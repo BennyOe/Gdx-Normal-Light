@@ -19,7 +19,7 @@ class Scene2dLightEngine(
     viewport: Viewport,
     val stage: Stage?,
     useDiffuseLight: Boolean = true,
-    maxShaderLights: Int = 20,
+    maxShaderLights: Int = 32,
 ) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.

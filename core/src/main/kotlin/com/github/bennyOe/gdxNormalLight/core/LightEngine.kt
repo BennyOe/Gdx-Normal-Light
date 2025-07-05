@@ -6,6 +6,25 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.viewport.Viewport
 
+/**
+ * A lighting engine that integrates normal mapping and Box2D-based shadow rendering into a 2D scene.
+ *
+ * This engine combines shader-based lighting (including support for diffuse, normal, and specular maps)
+ * with real-time shadows provided by box2dLight. It simplifies the process of rendering fully lit scenes
+ * using a single `renderLights { ... }` entry point.
+ *
+ * It offers helper methods like [draw] to render sprites with different map combinations and manages
+ * shader bindings and texture unit assignments automatically.
+ *
+ * @param rayHandler The Box2D RayHandler instance used to render physical light shadows.
+ * @param cam The camera used to render the scene.
+ * @param batch The SpriteBatch used for rendering the scene with lighting.
+ * @param viewport The Viewport used to configure the screen projection.
+ * @param useDiffuseLight Whether to apply diffuse lighting calculation in the shader.
+ * @param maxShaderLights Maximum number of shader-based lights supported.
+ * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
+ * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ */
 class LightEngine(
     rayHandler: RayHandler,
     cam: OrthographicCamera,
@@ -13,7 +32,9 @@ class LightEngine(
     viewport: Viewport,
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 32,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
+    entityCategory: Short = 0x0001,
+    entityMask: Short = -1,
+) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *

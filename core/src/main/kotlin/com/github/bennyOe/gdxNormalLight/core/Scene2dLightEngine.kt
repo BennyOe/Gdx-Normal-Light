@@ -12,6 +12,25 @@ import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.gdxNormalLight.core.AbstractLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
 
+/**
+ * A specialized light engine for Scene2D applications, combining normal mapping shaders with Box2D shadow rendering.
+ *
+ * This engine simplifies integration of dynamic lighting into Scene2D-based games and UI using a consistent rendering pipeline.
+ * It supports diffuse, normal, and specular mapping and is designed to be used with a Scene2D [Stage] and [Actor]s.
+ *
+ * It provides convenience methods to draw Scene2D actors or texture regions using lighting, while managing shader state,
+ * texture unit bindings, and batching automatically.
+ *
+ * @param rayHandler The Box2D RayHandler instance used for shadow rendering.
+ * @param cam The camera used to render the Scene2D stage.
+ * @param batch The SpriteBatch used to draw Scene2D actors and textures.
+ * @param viewport The viewport used to project the stage and shadow rendering.
+ * @param stage The Scene2D stage containing actors. May be null if rendering is handled manually.
+ * @param useDiffuseLight Whether to apply diffuse light shading in the lighting shader.
+ * @param maxShaderLights Maximum number of shader-based lights supported by the engine.
+ * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
+ * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ */
 class Scene2dLightEngine(
     rayHandler: RayHandler,
     cam: OrthographicCamera,
@@ -20,7 +39,9 @@ class Scene2dLightEngine(
     val stage: Stage?,
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 32,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights) {
+    entityCategory: Short = 0x0001,
+    entityMask: Short = -1,
+) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *

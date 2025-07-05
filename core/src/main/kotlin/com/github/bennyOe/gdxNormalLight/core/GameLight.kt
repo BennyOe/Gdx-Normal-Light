@@ -19,10 +19,30 @@ sealed class GameLight(
     var effect: LightEffectType? = null
     val effectParams: LightEffectParameters = LightEffectParameters()
 
+    var isOn: Boolean = true
+        private set
+    private var lastIntensity: Float = baseIntensity
+
     internal var flickerTimer = 0f
     internal var elapsedTime = 0f
     internal val currentTargetColor = baseColor
     internal var currentTargetIntensity = baseIntensity
+
+    fun setOn(active: Boolean) {
+        if (isOn == active) return
+
+        this.isOn = active
+        b2dLight.isActive = active
+
+        if (active) {
+            shaderLight.intensity = lastIntensity
+        } else {
+            lastIntensity = shaderLight.intensity
+            shaderLight.intensity = 0f
+        }
+    }
+
+    fun toggle() = setOn(!isOn)
 
     abstract override fun update()
 

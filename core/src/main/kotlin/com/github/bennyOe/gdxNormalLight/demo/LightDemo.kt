@@ -88,7 +88,7 @@ class LightDemo : AbstractLightDemo() {
             color = Color(0.8f, 0.8f, 1f, 0.45f),
             direction = -45f,
             initialIntensity = 2.8f,
-            elevation = 40f
+            elevation = 40f,
         )
 
         pointLight = lightEngine.addPointLight(
@@ -139,9 +139,9 @@ class LightDemo : AbstractLightDemo() {
         lightEngine.renderLights { engine ->
             // optional textures to toggle
 
-            // engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
-            // engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
-            engine.draw(plank, plankNormals, plankSpecular, 0f, 0f, 19f, 19f)
+             engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
+             engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
+//            engine.draw(plank, plankNormals, plankSpecular, 0f, 0f, 19f, 19f)
 
         }
         // Render Box2D debug lines

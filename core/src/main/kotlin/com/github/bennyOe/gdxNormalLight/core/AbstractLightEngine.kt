@@ -149,6 +149,8 @@ abstract class AbstractLightEngine(
         direction: Float,
         initialIntensity: Float,
         elevation: Float = 1f,
+        isStatic: Boolean = true,
+        isSoftShadow: Boolean = true,
         rays: Int = 128,
     ): GameLight.Directional {
         val correctedDirection = -direction
@@ -165,7 +167,10 @@ abstract class AbstractLightEngine(
                 rays,
                 color,
                 correctedDirection,
-            )
+            ).apply {
+                isStaticLight = isStatic
+                isSoft = isSoftShadow
+            }
 
         val gameLight = GameLight.Directional(shaderLight, b2dLight)
 

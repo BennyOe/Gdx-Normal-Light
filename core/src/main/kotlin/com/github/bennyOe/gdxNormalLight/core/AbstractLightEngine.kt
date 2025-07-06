@@ -389,6 +389,8 @@ abstract class AbstractLightEngine(
      * lights up to the maximum allowed by the shader (`maxShaderLights`). Only lights within the
      * `lightActivationRadius` (or all if the radius is -1) are activated, except for directional lights,
      * which are always activated regardless of distance.
+     * Lights have an `isOn` property to control whether they are enabled,
+     * and an `isManaged` property to determine if they are affected by distance-based culling.
      *
      * @param center The world position used as the reference for distance calculations.
      */

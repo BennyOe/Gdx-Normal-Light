@@ -53,6 +53,17 @@ A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighti
 
 ## ⚙️ Engine Setup & Usage
 
+### 🔦 Light Culling & Performance Optimization
+
+The engine automatically performs **light culling** every frame based on proximity to a specified center (usually the player or camera). Lights that are too far away from this center are temporarily deactivated unless they are directional lights, which are always active.
+
+This mechanism:
+- Improves performance by limiting shader computations to only nearby lights.
+- Ensures the engine respects the configured `maxShaderLights` limit (default: 32).
+- Is configurable via `lightActivationRadius`, which defines the maximum distance for lights to be considered "active". Set to `-1f` to disable distance-based culling.
+
+Directional lights are always included in the lighting pass, regardless of distance.
+
 ### Low-Level API (`LightEngine`)
 
 #### Initialization

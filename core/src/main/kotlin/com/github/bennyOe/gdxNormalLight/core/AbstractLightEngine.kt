@@ -44,6 +44,7 @@ import kotlin.math.sin
  * @param maxShaderLights Maximum number of shader lights processed by the engine.
  * @param entityCategory Default category bitmask for newly created Box2D lights.
  * @param entityMask Default mask bitmask for collision filtering of Box2D lights.
+ * @param lightActivationRadius The maximum distance from the center within which lights are activated. Use -1 to disable the radius limit.
  */
 abstract class AbstractLightEngine(
     val rayHandler: RayHandler,
@@ -54,13 +55,15 @@ abstract class AbstractLightEngine(
     val maxShaderLights: Int = 32,
     val entityCategory: Short = 0x0001.toShort(),
     val entityMask: Short = -1,
+    val lightActivationRadius: Float = -1f,
 ) {
     protected val vertShader: FileHandle = Gdx.files.internal("shader/light.vert")
     protected val fragShader: FileHandle = Gdx.files.internal("shader/light.frag")
     protected lateinit var shader: ShaderProgram
     protected lateinit var shaderAmbientColor: Color
-    protected val lights = mutableListOf<GameLight>()
-    protected val shaderLights get() = lights.take(maxShaderLights)
+    protected val activeLights = mutableListOf<GameLight>()
+    protected val shaderLights get() = activeLights.take(maxShaderLights)
+    protected val managedLights = mutableListOf<GameLight>()
     protected var normalInfluenceValue: Float = 1f
     protected var lastNormalMap: Texture? = null
     protected var lastSpecularMap: Texture? = null
@@ -76,27 +79,32 @@ abstract class AbstractLightEngine(
         rayHandler.setAmbientLight(.1f, .1f, .1f, .1f)
     }
 
-    private fun setupShader() {
-        ShaderProgram.pedantic = false
-        shader = ShaderProgram(vertShader, fragShader)
-
-        if (!shader.isCompiled) {
-            throw GdxRuntimeException("Could not compile shader: ${shader.log}")
-        }
-
-        shader.bind()
-        shader.setUniformi("u_normals", 1)
-        shader.setUniformi("u_specular", 2)
-    }
-
+    /**
+     * Sets the batch's shader to the engine's custom lighting shader.
+     *
+     * This method assigns the engine's lighting shader to the SpriteBatch, enabling
+     * advanced lighting effects (normal/specular mapping, dynamic lights) for subsequent draw calls.
+     * Call this before rendering objects that should be affected by the lighting system.
+     */
     fun setShaderToEngineShader() {
         batch.shader = shader
     }
 
+    /**
+     * Sets the batch's shader to the default shader (disables custom lighting shader).
+     *
+     * This method restores the default rendering behavior by removing the custom lighting shader
+     * from the SpriteBatch. After calling this, rendering will use the default pipeline.
+     */
     fun setShaderToDefaultShader() {
         batch.shader = null
     }
 
+    /**
+     * Enables or disables diffuse lighting mode for the Box2D RayHandler.
+     *
+     * @param value If true, diffuse lighting is enabled; if false, it is disabled.
+     */
     fun setDiffuseLight(value: Boolean) {
         RayHandler.useDiffuseLight(value)
     }
@@ -115,7 +123,7 @@ abstract class AbstractLightEngine(
      * @param light The [GameLight] instance to be managed and rendered by the engine.
      */
     fun addLight(light: GameLight) {
-        if (lights.contains(light)) return
+        if (managedLights.contains(light)) return
 
         val newB2dLight =
             when (light) {
@@ -161,8 +169,9 @@ abstract class AbstractLightEngine(
         }
 
         light.b2dLight = newB2dLight
+        newB2dLight.isActive = false
 
-        lights.add(light)
+        managedLights.add(light)
     }
 
     /**
@@ -213,6 +222,7 @@ abstract class AbstractLightEngine(
             }
 
         b2dLight.apply {
+            isActive = false
             setContactFilter(
                 Filter().apply {
                     categoryBits = entityCategory
@@ -223,7 +233,7 @@ abstract class AbstractLightEngine(
 
         val gameLight = GameLight.Directional(shaderLight, b2dLight)
 
-        lights.add(gameLight)
+        managedLights.add(gameLight)
         return gameLight
     }
 
@@ -276,6 +286,7 @@ abstract class AbstractLightEngine(
             )
 
         b2dLight.apply {
+            isActive = false
             setContactFilter(
                 Filter().apply {
                     categoryBits = entityCategory
@@ -286,7 +297,7 @@ abstract class AbstractLightEngine(
 
         val gameLight = GameLight.Point(shaderLight, b2dLight, shaderIntensityMultiplier)
 
-        lights.add(gameLight)
+        managedLights.add(gameLight)
         return gameLight
     }
 
@@ -346,6 +357,7 @@ abstract class AbstractLightEngine(
             )
 
         b2dLight.apply {
+            isActive = false
             setContactFilter(
                 Filter().apply {
                     categoryBits = entityCategory
@@ -356,8 +368,64 @@ abstract class AbstractLightEngine(
 
         val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderIntensityMultiplier)
 
-        lights.add(gameLight)
+        managedLights.add(gameLight)
         return gameLight
+    }
+
+    /**
+     * Updates the list of active lights based on their distance to a given center point.
+     *
+     * This method deactivates all currently active lights, sorts the managed lights by their distance
+     * to the provided `center` (typically the camera or player position), and then activates the closest
+     * lights up to the maximum allowed by the shader (`maxShaderLights`). Only lights within the
+     * `lightActivationRadius` (or all if the radius is -1) are activated, except for directional lights,
+     * which are always activated regardless of distance.
+     *
+     * @param center The world position used as the reference for distance calculations.
+     */
+    protected fun updateActiveLights(center: Vector2) {
+        // Deactivate all previously active lights.
+        activeLights.forEach { it.b2dLight.isActive = false }
+        activeLights.clear()
+
+        val potentialLights = mutableListOf<GameLight>()
+        val radiusSquared = if (lightActivationRadius > 0) lightActivationRadius * lightActivationRadius else -1f
+
+        // Filter lights based on the activation radius.
+        for (light in managedLights) {
+            // Directional lights are always considered active, regardless of distance.
+            if (light is GameLight.Directional) {
+                potentialLights.add(light)
+                continue
+            }
+
+            // For other lights, check if they are within the activation radius.
+            if (radiusSquared == -1f || Vector2.dst2(light.b2dLight.x, light.b2dLight.y, center.x, center.y) <= radiusSquared) {
+                potentialLights.add(light)
+            }
+        }
+
+        // Sort the potential lights by distance.
+        potentialLights.sortWith { l1, l2 ->
+            // Ensure directional lights are not sorted by distance and always appear first.
+            val isL1Directional = l1 is GameLight.Directional
+            val isL2Directional = l2 is GameLight.Directional
+            if (isL1Directional && !isL2Directional) return@sortWith -1
+            if (isL2Directional && !isL1Directional) return@sortWith 1
+            if (isL1Directional) return@sortWith 0
+
+            // Sort other lights by their squared distance.
+            val dst1 = Vector2.dst2(l1.b2dLight.x, l1.b2dLight.y, center.x, center.y)
+            val dst2 = Vector2.dst2(l2.b2dLight.x, l2.b2dLight.y, center.x, center.y)
+            dst1.compareTo(dst2)
+        }
+
+        // Activate the closest lights up to the maximum allowed by the shader.
+        for (i in 0 until potentialLights.size.coerceAtMost(maxShaderLights)) {
+            val light = potentialLights[i]
+            light.b2dLight.isActive = true
+            activeLights.add(light)
+        }
     }
 
     /**
@@ -396,9 +464,10 @@ abstract class AbstractLightEngine(
      */
     fun removeLight(light: GameLight) {
         light.b2dLight.remove()
-        lights.remove(light)
+        activeLights.remove(light)
+        managedLights.remove(light)
         shader.bind()
-        shader.setUniformi("lightCount", lights.size)
+        shader.setUniformi("lightCount", activeLights.size)
     }
 
     /**
@@ -413,7 +482,7 @@ abstract class AbstractLightEngine(
      * @return The estimated brightness as a value between 0.0 (dark) and 1.0 (fully lit).
      */
     fun estimateBrightness(pos: Vector2): Double =
-        lights
+        activeLights
             .sumOf { light ->
                 when (light) {
                     is GameLight.Point -> {
@@ -449,7 +518,8 @@ abstract class AbstractLightEngine(
      * Removes all dynamic lights from the engine.
      */
     fun clearLights() {
-        lights.clear()
+        activeLights.clear()
+        managedLights.clear()
         rayHandler.removeAll()
         shader.bind()
         shader.setUniformi("lightCount", 0)
@@ -482,7 +552,7 @@ abstract class AbstractLightEngine(
      * with the underlying Box2D light objects. This ensures that any changes made to the lights
      * are applied before they are rendered.
      */
-    fun update() = lights.forEach { it.update() }
+    fun update() = activeLights.forEach { it.update() }
 
     /**
      * Updates and binds all uniform values required by the lighting shader.
@@ -527,8 +597,8 @@ abstract class AbstractLightEngine(
         shader.setUniformf("u_viewportSize", screenW, screenH)
 
         for (i in shaderLights.indices) {
-            val gameLight = lights[i]
-            val data = lights[i].shaderLight
+            val gameLight = activeLights[i]
+            val data = activeLights[i].shaderLight
             val prefix = "[$i]"
             shader.setUniformf("lightColor$prefix", vec4(data.color.r, data.color.g, data.color.b, data.color.a * data.intensity))
             shader.setUniformf("shininess", 32f)
@@ -595,7 +665,21 @@ abstract class AbstractLightEngine(
     }
 
     fun dispose() {
+        clearLights()
         rayHandler.disposeSafely()
         shader.disposeSafely()
+    }
+
+    private fun setupShader() {
+        ShaderProgram.pedantic = false
+        shader = ShaderProgram(vertShader, fragShader)
+
+        if (!shader.isCompiled) {
+            throw GdxRuntimeException("Could not compile shader: ${shader.log}")
+        }
+
+        shader.bind()
+        shader.setUniformi("u_normals", 1)
+        shader.setUniformi("u_specular", 2)
     }
 }

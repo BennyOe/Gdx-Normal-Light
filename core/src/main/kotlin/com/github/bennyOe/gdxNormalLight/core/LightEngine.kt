@@ -4,7 +4,9 @@ import box2dLight.RayHandler
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.Viewport
+import ktx.math.vec2
 
 /**
  * A lighting engine that integrates normal mapping and Box2D-based shadow rendering into a 2D scene.
@@ -34,7 +36,17 @@ class LightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
+) : AbstractLightEngine(
+    rayHandler,
+    cam,
+    batch,
+    viewport,
+    useDiffuseLight,
+    maxShaderLights,
+    entityCategory,
+    entityMask,
+
+) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -52,12 +64,14 @@ class LightEngine(
      * - **Diffuse texture must be bound to texture unit 0** before calling `batch.draw(...)`.
      * - Use the batch normally for rendering your sprites — lighting will be automatically applied by the shader.
      *
+     * @param center The world position around which lights are prioritized and updated.
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(drawScene: (LightEngine) -> Unit) {
+    fun renderLights(center: Vector2 = vec2(0f, 0f), drawScene: (LightEngine) -> Unit) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
+        updateActiveLights(center)
         setShaderToEngineShader()
         applyShaderUniforms()
 

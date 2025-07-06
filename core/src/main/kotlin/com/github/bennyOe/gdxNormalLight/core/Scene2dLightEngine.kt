@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.github.bennyOe.gdxNormalLight.core.AbstractLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
+import ktx.math.vec2
 
 /**
  * A specialized light engine for Scene2D applications, combining normal mapping shaders with Box2D shadow rendering.
@@ -41,7 +42,16 @@ class Scene2dLightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
+) : AbstractLightEngine(
+    rayHandler,
+    cam,
+    batch,
+    viewport,
+    useDiffuseLight,
+    maxShaderLights,
+    entityCategory,
+    entityMask
+) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -59,12 +69,14 @@ class Scene2dLightEngine(
      * - **Diffuse texture must be bound to texture unit 0** before calling `batch.draw(...)`.
      * - Use the batch normally for rendering your sprites — lighting will be automatically applied by the shader.
      *
+     * @param center The [Actor] used as the center point for light culling and focus (usually the camera or player).
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(drawScene: (Scene2dLightEngine) -> Unit) {
+    fun renderLights(center: Actor = Actor(), drawScene: (Scene2dLightEngine) -> Unit) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
+        updateActiveLights(vec2(center.x, center.y))
         setShaderToEngineShader()
         applyShaderUniforms()
 

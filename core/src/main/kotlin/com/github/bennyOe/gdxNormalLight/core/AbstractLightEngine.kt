@@ -189,6 +189,8 @@ abstract class AbstractLightEngine(
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @param entityCategory Optional: Bitmask defining the category of the light. Defaults to the engine's configured category if not set.
      * @param entityMask Optional: Bitmask defining the collision mask for the light. Defaults to the engine's configured mask if not set.
+     * @param isManaged If true, the light is affected by the distance-based culling system. If false, it will always be active if its `isOn` property is true.
+     *
      * @return The created [GameLight.Directional] instance, which can be used to modify the light's properties later.
      */
     fun addDirectionalLight(
@@ -201,6 +203,7 @@ abstract class AbstractLightEngine(
         rays: Int = 128,
         entityCategory: Short = this.entityCategory,
         entityMask: Short = this.entityMask,
+        isManaged: Boolean = true,
     ): GameLight.Directional {
         val correctedDirection = -direction
         val shaderLight =
@@ -231,7 +234,7 @@ abstract class AbstractLightEngine(
             )
         }
 
-        val gameLight = GameLight.Directional(shaderLight, b2dLight)
+        val gameLight = GameLight.Directional(shaderLight, b2dLight, isManaged)
 
         managedLights.add(gameLight)
         return gameLight
@@ -253,6 +256,8 @@ abstract class AbstractLightEngine(
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @param entityCategory Optional: Bitmask defining the category of the light. Defaults to the engine's configured category if not set.
      * @param entityMask Optional: Bitmask defining the collision mask for the light. Defaults to the engine's configured mask if not set.
+     * @param isManaged If true, the light is affected by the distance-based culling system. If false, it will always be active if its `isOn` property is true.
+     *
      * @return The created [GameLight.Point] instance, which can be used to modify the light's properties later.
      */
     fun addPointLight(
@@ -265,6 +270,7 @@ abstract class AbstractLightEngine(
         rays: Int = 128,
         entityCategory: Short = this.entityCategory,
         entityMask: Short = this.entityMask,
+        isManaged: Boolean = true,
     ): GameLight.Point {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
 
@@ -295,7 +301,7 @@ abstract class AbstractLightEngine(
             )
         }
 
-        val gameLight = GameLight.Point(shaderLight, b2dLight, shaderIntensityMultiplier)
+        val gameLight = GameLight.Point(shaderLight, b2dLight, shaderIntensityMultiplier, isManaged)
 
         managedLights.add(gameLight)
         return gameLight
@@ -318,6 +324,8 @@ abstract class AbstractLightEngine(
      * @param rays The number of rays used for the Box2D light. More rays produce higher quality shadows but are more performance-intensive.
      * @param entityCategory Optional: Bitmask defining the category of the light. Defaults to the engine's configured category if not set.
      * @param entityMask Optional: Bitmask defining the collision mask for the light. Defaults to the engine's configured mask if not set.
+     * @param isManaged If true, the light is affected by the distance-based culling system. If false, it will always be active if its `isOn` property is true.
+     *
      * @return The created [GameLight.Spot] instance, which can be used to modify the light's properties later.
      */
     fun addSpotLight(
@@ -332,6 +340,7 @@ abstract class AbstractLightEngine(
         rays: Int = 128,
         entityCategory: Short = this.entityCategory,
         entityMask: Short = this.entityMask,
+        isManaged: Boolean = true,
     ): GameLight.Spot {
         val falloff = Falloff.fromDistance(b2dDistance, falloffProfile).toVector3()
 
@@ -366,7 +375,7 @@ abstract class AbstractLightEngine(
             )
         }
 
-        val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderIntensityMultiplier)
+        val gameLight = GameLight.Spot(shaderLight, b2dLight, shaderIntensityMultiplier, isManaged)
 
         managedLights.add(gameLight)
         return gameLight
@@ -388,14 +397,29 @@ abstract class AbstractLightEngine(
         activeLights.forEach { it.b2dLight.isActive = false }
         activeLights.clear()
 
+        val (culledLights, unmanagedLights) = managedLights.partition { it.isManaged }
+
+        // Activate all unmanaged lights that are currently 'on'.
+        for (light in unmanagedLights) {
+            if (light.isOn) {
+                light.b2dLight.isActive = true
+                activeLights.add(light)
+            }
+        }
+
         val potentialLights = mutableListOf<GameLight>()
         val radiusSquared = if (lightActivationRadius > 0) lightActivationRadius * lightActivationRadius else -1f
 
         // Filter lights based on the activation radius.
-        for (light in managedLights) {
+        for (light in culledLights) {
             // Directional lights are always considered active, regardless of distance.
             if (light is GameLight.Directional) {
                 potentialLights.add(light)
+                continue
+            }
+
+            // Filter lights based on their own 'isOn' state.
+            if (!light.isOn) {
                 continue
             }
 

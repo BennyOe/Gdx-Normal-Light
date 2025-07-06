@@ -26,6 +26,7 @@ import ktx.math.vec2
  * @param maxShaderLights Maximum number of shader-based lights supported.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
  * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ * @param lightActivationRadius The maximum distance from the center within which lights are activated. Use -1 to disable the radius limit.
  */
 class LightEngine(
     rayHandler: RayHandler,
@@ -36,6 +37,7 @@ class LightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
+    lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
     rayHandler,
     cam,
@@ -45,7 +47,7 @@ class LightEngine(
     maxShaderLights,
     entityCategory,
     entityMask,
-
+    lightActivationRadius,
 ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.

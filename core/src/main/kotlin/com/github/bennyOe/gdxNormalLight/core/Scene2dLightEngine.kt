@@ -1,4 +1,4 @@
-package io.bennyoe.lightEngine.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.gdxNormalLight.core.AbstractLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
 import ktx.math.vec2
 
@@ -31,6 +30,7 @@ import ktx.math.vec2
  * @param maxShaderLights Maximum number of shader-based lights supported by the engine.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
  * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ * @param lightActivationRadius The maximum distance from the center within which lights are activated. Use -1 to disable the radius limit.
  */
 class Scene2dLightEngine(
     rayHandler: RayHandler,
@@ -42,6 +42,7 @@ class Scene2dLightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
+    lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
     rayHandler,
     cam,
@@ -50,7 +51,8 @@ class Scene2dLightEngine(
     useDiffuseLight,
     maxShaderLights,
     entityCategory,
-    entityMask
+    entityMask,
+    lightActivationRadius,
 ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
@@ -76,7 +78,10 @@ class Scene2dLightEngine(
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
-        updateActiveLights(vec2(center.x, center.y))
+        val centerX = center.x + center.width * 0.5f
+        val centerY = center.y + center.height * 0.5f
+        updateActiveLights(vec2(centerX, centerY))
+
         setShaderToEngineShader()
         applyShaderUniforms()
 

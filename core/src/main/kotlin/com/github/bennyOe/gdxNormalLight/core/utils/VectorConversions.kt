@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.viewport.Viewport
 fun worldToScreenSpace(
     world: Vector3,
     cam: OrthographicCamera,
-    viewport: Viewport
+    viewport: Viewport,
 ): Vector3 {
     val tmp = cam.project(world.cpy())
     tmp.x = (tmp.x - viewport.screenX) / viewport.screenWidth

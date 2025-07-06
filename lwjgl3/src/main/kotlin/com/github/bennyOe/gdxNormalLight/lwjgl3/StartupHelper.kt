@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//Note, the above license and copyright applies to this file only.
 package com.github.bennyOe.gdxNormalLight.lwjgl3
 
 import com.badlogic.gdx.Version
@@ -25,7 +24,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.lang.management.ManagementFactory
-import java.util.*
+import java.util.Locale
 
 /**
  * Adds some utilities to ensure that the JVM was started with the
@@ -43,6 +42,7 @@ class StartupHelper private constructor() {
 
     companion object {
         private const val JVM_RESTARTED_ARG = "jvmIsRestarted"
+
         /**
          * Starts a new JVM if the application was started on macOS without the
          * `-XstartOnFirstThread` argument. This also includes some code for
@@ -72,20 +72,20 @@ class StartupHelper private constructor() {
             val osName = System.getProperty("os.name").lowercase(Locale.getDefault())
             if (!osName.contains("mac")) {
                 if (osName.contains("windows")) {
-                  // Here, we are trying to work around an issue with how LWJGL3 loads its extracted .dll files.
-                  // By default, LWJGL3 extracts to the directory specified by "java.io.tmpdir", which is usually the user's home.
-                  // If the user's name has non-ASCII (or some non-alphanumeric) characters in it, that would fail.
-                  // By extracting to the relevant "ProgramData" folder, which is usually "C:\ProgramData", we avoid this.
-                  // We also temporarily change the "user.name" property to one without any chars that would be invalid.
-                  // We revert our changes immediately after loading LWJGL3 natives.
-                  val programData = System.getenv("ProgramData") ?: "C:\\Temp\\"
-                  val prevTmpDir = System.getProperty("java.io.tmpdir", programData)
-                  val prevUser = System.getProperty("user.name", "libGDX_User")
-                  System.setProperty("java.io.tmpdir", "$programData/libGDX-temp")
-                  System.setProperty("user.name", "User_${prevUser.hashCode()}_GDX${Version.VERSION}".replace('.', '_'))
-                  Lwjgl3NativesLoader.load()
-                  System.setProperty("java.io.tmpdir", prevTmpDir)
-                  System.setProperty("user.name", prevUser)
+                    // Here, we are trying to work around an issue with how LWJGL3 loads its extracted .dll files.
+                    // By default, LWJGL3 extracts to the directory specified by "java.io.tmpdir", which is usually the user's home.
+                    // If the user's name has non-ASCII (or some non-alphanumeric) characters in it, that would fail.
+                    // By extracting to the relevant "ProgramData" folder, which is usually "C:\ProgramData", we avoid this.
+                    // We also temporarily change the "user.name" property to one without any chars that would be invalid.
+                    // We revert our changes immediately after loading LWJGL3 natives.
+                    val programData = System.getenv("ProgramData") ?: "C:\\Temp\\"
+                    val prevTmpDir = System.getProperty("java.io.tmpdir", programData)
+                    val prevUser = System.getProperty("user.name", "libGDX_User")
+                    System.setProperty("java.io.tmpdir", "$programData/libGDX-temp")
+                    System.setProperty("user.name", "User_${prevUser.hashCode()}_GDX${Version.VERSION}".replace('.', '_'))
+                    Lwjgl3NativesLoader.load()
+                    System.setProperty("java.io.tmpdir", prevTmpDir)
+                    System.setProperty("user.name", prevUser)
                 }
                 return false
             }
@@ -113,7 +113,7 @@ class StartupHelper private constructor() {
             // avoids looping, but most certainly leads to a crash
             if ("true" == System.getProperty(JVM_RESTARTED_ARG)) {
                 System.err.println(
-                    "There was a problem evaluating whether the JVM was started with the -XstartOnFirstThread argument."
+                    "There was a problem evaluating whether the JVM was started with the -XstartOnFirstThread argument.",
                 )
                 return false
             }
@@ -124,10 +124,11 @@ class StartupHelper private constructor() {
             // The following line is used assuming you target Java 8, the minimum for LWJGL3.
             val javaExecPath = System.getProperty("java.home") + separator + "bin" + separator + "java"
             // If targeting Java 9 or higher, you could use the following instead of the above line:
-            //String javaExecPath = ProcessHandle.current().info().command().orElseThrow();
+            // String javaExecPath = ProcessHandle.current().info().command().orElseThrow();
             if (!File(javaExecPath).exists()) {
                 System.err.println(
-                    "A Java installation could not be found. If you are distributing this app with a bundled JRE, be sure to set the -XstartOnFirstThread argument manually!"
+                    "A Java installation could not be found. If you are distributing this app with a bundled JRE," +
+                        " be sure to set the -XstartOnFirstThread argument manually!",
                 )
                 return false
             }
@@ -140,12 +141,13 @@ class StartupHelper private constructor() {
             var mainClass = System.getenv("JAVA_MAIN_CLASS_$pid")
             if (mainClass == null) {
                 val trace = Thread.currentThread().stackTrace
-                mainClass = if (trace.isNotEmpty()) {
-                    trace[trace.size - 1].className
-                } else {
-                    System.err.println("The main class could not be determined.")
-                    return false
-                }
+                mainClass =
+                    if (trace.isNotEmpty()) {
+                        trace[trace.size - 1].className
+                    } else {
+                        System.err.println("The main class could not be determined.")
+                        return false
+                    }
             }
             jvmArgs.add(mainClass)
             try {
@@ -153,11 +155,14 @@ class StartupHelper private constructor() {
                     val processBuilder = ProcessBuilder(jvmArgs)
                     processBuilder.start()
                 } else {
-                    val process = ProcessBuilder(jvmArgs)
-                        .redirectErrorStream(true).start()
-                    val processOutput = BufferedReader(
-                        InputStreamReader(process.inputStream)
-                    )
+                    val process =
+                        ProcessBuilder(jvmArgs)
+                            .redirectErrorStream(true)
+                            .start()
+                    val processOutput =
+                        BufferedReader(
+                            InputStreamReader(process.inputStream),
+                        )
                     var line: String?
                     while (processOutput.readLine().also { line = it } != null) {
                         println(line)

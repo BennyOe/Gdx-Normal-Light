@@ -20,7 +20,6 @@ sealed class GameLight(
     var effect: LightEffectType? = null
     val effectParams: LightEffectParameters = LightEffectParameters()
 
-
     var isOn: Boolean = true
         private set
     private var lastIntensity: Float = baseIntensity

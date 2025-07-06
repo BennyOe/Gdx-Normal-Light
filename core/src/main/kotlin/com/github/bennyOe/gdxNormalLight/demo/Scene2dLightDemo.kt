@@ -6,9 +6,9 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.github.bennyOe.gdxNormalLight.core.GameLight
+import com.github.bennyOe.gdxNormalLight.core.Scene2dLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.LightActor
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
-import com.github.bennyOe.gdxNormalLight.core.Scene2dLightEngine
 import ktx.math.vec2
 
 /**
@@ -40,21 +40,23 @@ class Scene2dLightDemo : AbstractLightDemo() {
 
         lightEngine = Scene2dLightEngine(rayHandler, cam, batch, viewport, stage)
 
-        directionalLight = lightEngine.addDirectionalLight(
-            Color(0.8f, 0.8f, 1f, 0.45f),
-            -45f,
-            2.8f,
-            40f
-        )
+        directionalLight =
+            lightEngine.addDirectionalLight(
+                Color(0.8f, 0.8f, 1f, 0.45f),
+                -45f,
+                2.8f,
+                40f,
+            )
 
-        pointLight = lightEngine.addPointLight(
-            vec2(6f, 6f),
-            Color(1f, 0.5f, 0.2f, 1f),
-            2f,
-            7f,
-            1f,
-            1f
-        )
+        pointLight =
+            lightEngine.addPointLight(
+                vec2(6f, 6f),
+                Color(1f, 0.5f, 0.2f, 1f),
+                2f,
+                7f,
+                1f,
+                1f,
+            )
         pointActor = LightActor(pointLight)
         stage.addActor(pointActor)
 
@@ -69,7 +71,10 @@ class Scene2dLightDemo : AbstractLightDemo() {
         stage.addActor(woodActor)
     }
 
-    override fun resize(width: Int, height: Int) {
+    override fun resize(
+        width: Int,
+        height: Int,
+    ) {
         lightEngine.resize(width, height)
     }
 
@@ -88,7 +93,7 @@ class Scene2dLightDemo : AbstractLightDemo() {
 
         lightEngine.renderLights { engine ->
             for (actor in stage.actors) {
-                    engine.draw(actor)
+                engine.draw(actor)
             }
         }
 

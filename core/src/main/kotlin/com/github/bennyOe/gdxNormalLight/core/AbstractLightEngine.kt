@@ -164,7 +164,7 @@ abstract class AbstractLightEngine(
                 Filter().apply {
                     categoryBits = entityCategory
                     maskBits = entityMask
-                }
+                },
             )
         }
 
@@ -230,7 +230,7 @@ abstract class AbstractLightEngine(
                 Filter().apply {
                     categoryBits = entityCategory
                     maskBits = entityMask
-                }
+                },
             )
         }
 
@@ -297,7 +297,7 @@ abstract class AbstractLightEngine(
                 Filter().apply {
                     categoryBits = entityCategory
                     maskBits = entityMask
-                }
+                },
             )
         }
 
@@ -371,7 +371,7 @@ abstract class AbstractLightEngine(
                 Filter().apply {
                     categoryBits = entityCategory
                     maskBits = entityMask
-                }
+                },
             )
         }
 

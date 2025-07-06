@@ -44,16 +44,16 @@ class Scene2dLightEngine(
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-    rayHandler,
-    cam,
-    batch,
-    viewport,
-    useDiffuseLight,
-    maxShaderLights,
-    entityCategory,
-    entityMask,
-    lightActivationRadius,
-) {
+        rayHandler,
+        cam,
+        batch,
+        viewport,
+        useDiffuseLight,
+        maxShaderLights,
+        entityCategory,
+        entityMask,
+        lightActivationRadius,
+    ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -74,7 +74,10 @@ class Scene2dLightEngine(
      * @param center The [Actor] used as the center point for light culling and focus (usually the camera or player).
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(center: Actor = Actor(), drawScene: (Scene2dLightEngine) -> Unit) {
+    fun renderLights(
+        center: Actor = Actor(),
+        drawScene: (Scene2dLightEngine) -> Unit,
+    ) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
 

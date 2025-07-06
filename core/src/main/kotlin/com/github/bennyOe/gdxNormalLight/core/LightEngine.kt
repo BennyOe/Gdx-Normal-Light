@@ -39,16 +39,16 @@ class LightEngine(
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-    rayHandler,
-    cam,
-    batch,
-    viewport,
-    useDiffuseLight,
-    maxShaderLights,
-    entityCategory,
-    entityMask,
-    lightActivationRadius,
-) {
+        rayHandler,
+        cam,
+        batch,
+        viewport,
+        useDiffuseLight,
+        maxShaderLights,
+        entityCategory,
+        entityMask,
+        lightActivationRadius,
+    ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -69,7 +69,10 @@ class LightEngine(
      * @param center The world position around which lights are prioritized and updated.
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(center: Vector2 = vec2(0f, 0f), drawScene: (LightEngine) -> Unit) {
+    fun renderLights(
+        center: Vector2 = vec2(0f, 0f),
+        drawScene: (LightEngine) -> Unit,
+    ) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
@@ -173,7 +176,6 @@ class LightEngine(
         shader.setUniformi("u_useSpecularMap", 0)
         shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
-
         normals.bind(1)
         diffuse.bind(0)
         if (flipX) {
@@ -217,7 +219,6 @@ class LightEngine(
         shader.setUniformi("u_useNormalMap", 0)
         shader.setUniformi("u_useSpecularMap", 0)
         shader.setUniformi("u_flipX", if (flipX) 1 else 0)
-
 
         diffuse.bind(0)
         if (flipX) {

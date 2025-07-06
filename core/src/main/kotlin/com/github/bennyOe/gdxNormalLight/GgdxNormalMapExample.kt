@@ -13,6 +13,3 @@ class GgdxNormalMapExample : KtxGame<KtxScreen>() {
         setScreen<LightDemo>()
     }
 }
-
-
-

@@ -74,24 +74,31 @@ abstract class AbstractLightDemo : KtxScreen {
         createWallBody(world, vec2(9.5f, 6.5f), wallSize)
     }
 
-    protected fun createWallBody(world: World, position: Vector2, size: Float) {
-        val bodyDef = BodyDef().apply {
-            type = BodyDef.BodyType.StaticBody
-            position.set(position)
-        }
+    protected fun createWallBody(
+        world: World,
+        position: Vector2,
+        size: Float,
+    ) {
+        val bodyDef =
+            BodyDef().apply {
+                type = BodyDef.BodyType.StaticBody
+                position.set(position)
+            }
 
         wallBody = world.createBody(bodyDef)
 
-        val shape = PolygonShape().apply {
-            setAsBox(size, size, position, 0f)
-        }
+        val shape =
+            PolygonShape().apply {
+                setAsBox(size, size, position, 0f)
+            }
 
-        val fixtureDef = FixtureDef().apply {
-            this.shape = shape
-            density = 1f
-            friction = 0.5f
-            restitution = 0.1f
-        }
+        val fixtureDef =
+            FixtureDef().apply {
+                this.shape = shape
+                density = 1f
+                friction = 0.5f
+                restitution = 0.1f
+            }
 
         wallBody.createFixture(fixtureDef)
         shape.dispose()

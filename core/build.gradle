@@ -54,7 +54,6 @@ publishing {
     mavenJava(MavenPublication) {
       groupId = 'io.github.bennyoe'
       artifactId = 'gdx-normal-light'
-      version = '1.0.0'
 
       artifact jar
       artifact sourcesJar

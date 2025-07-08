@@ -18,10 +18,37 @@ buildscript {
 plugins {
   id 'maven-publish'
   id 'signing'
+  id 'pl.allegro.tech.build.axion-release' version '1.15.1'
+}
+
+tasks.register('publishForRelease') {
+    // For testing, we publish to the local maven repository.
+    // For a real release, this should be ':core:publish'.
+    dependsOn ':core:publishToMavenLocal'
+
+    // This task should only run if the version determined by axion-release has changed.
+    onlyIf {
+        scmVersion.version != scmVersion.previousVersion
+    }
+
+    doFirst {
+        println "Version changed from ${scmVersion.previousVersion} to ${scmVersion.version}. Publishing..."
+    }
+}
+
+scmVersion {
+    tag {
+        prefix = ''
+        versionSeparator = ''
+    }
+}
+
+// Configure the release task from the plugin to run our publish task after it completes.
+tasks.named('release') {
+    finalizedBy 'publishForRelease'
 }
 
 group = 'io.github.bennyOe'
-version = '1.0.0'
 
 
 

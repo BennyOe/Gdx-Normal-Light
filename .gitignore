@@ -4,6 +4,7 @@ gradle-app.setting
 /build/
 /android/build/
 /core/build/
+/demo/build/
 /lwjgl2/build/
 /lwjgl3/build/
 /html/build/

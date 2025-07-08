@@ -222,5 +222,3 @@ Make sure the shaders `light.vert` and `light.frag` are in `assets/shader`.
 
 - Based on [mattdesl's shader gist](https://gist.github.com/mattdesl/4653464)
 - Thanks to [Quillraven](https://github.com/Quillraven) for inspiration [YouTube Tutorials](https://www.youtube.com/@Quillraven)
-
-df

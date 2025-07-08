@@ -19,7 +19,7 @@ sourceSets {
     }
     resources {
       srcDirs = ["src/main/resources", "${project.rootDir}/assets"]
-      exclude("textures/**", "assets.txt")
+      include "shader/**"
     }
     java.srcDirs += kotlin.srcDirs
   }

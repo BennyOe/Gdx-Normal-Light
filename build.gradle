@@ -10,10 +10,20 @@ buildscript {
   }
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-    classpath "org.jlleitschuh.gradle:ktlint-gradle:12.2.0" // aktuelle Version prüfen
+    classpath "org.jlleitschuh.gradle:ktlint-gradle:12.2.0"
 
   }
 }
+
+plugins {
+  id 'maven-publish'
+  id 'signing'
+}
+
+group = 'io.github.bennyOe'
+version = '1.0.0'
+
+
 
 allprojects {
   apply plugin: 'eclipse'
@@ -38,7 +48,7 @@ configure(subprojects) {
   // The article can be helpful when using assets.txt in your project.
   tasks.register('generateAssetList') {
     inputs.dir("${project.rootDir}/assets/")
-    // projectFolder/assets
+    // projectFolder/asses
     File assetsFolder = new File("${project.rootDir}/assets/")
     // projectFolder/assets/assets.txt
     File assetsFile = new File(assetsFolder, "assets.txt")

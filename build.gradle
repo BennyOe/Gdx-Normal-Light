@@ -22,32 +22,35 @@ plugins {
 }
 
 tasks.register('publishForRelease') {
-    // For testing, we publish to the local maven repository.
-    // For a real release, this should be ':core:publish'.
-    dependsOn ':core:publishToMavenLocal'
+  // For testing, we publish to the local maven repository.
+  // For a real release, this should be ':core:publish'.
+  // use this command to publish to the local maven repository:  ./gradlew release -Prelease.push=false -Prelease.localOnly=true
+//  dependsOn ':core:publishToMavenLocal'
 
-    // This task should only run when the release task is executed.
-    onlyIf { project.hasProperty('release.version') }
+  // For a real release, this should be ':core:publish'.
+  dependsOn ':core:publish'
 
-    doFirst {
-        println "Running publish for release..."
-    }
+  // This task should only run when the release task is executed.
+  onlyIf { project.hasProperty('release.version') }
+
+  doFirst {
+    println "Running publish for release..."
+  }
 }
 
 scmVersion {
-    tag {
-        prefix = ''
-        versionSeparator = ''
-    }
+  tag {
+    prefix = ''
+    versionSeparator = ''
+  }
 }
 
 // Configure the release task from the plugin to run our publish task after it completes.
 tasks.named('release') {
-    finalizedBy 'publishForRelease'
+  finalizedBy 'publishForRelease'
 }
 
 group = 'io.github.bennyOe'
-
 
 
 allprojects {

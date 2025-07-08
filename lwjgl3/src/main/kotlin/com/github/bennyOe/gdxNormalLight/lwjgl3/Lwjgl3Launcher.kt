@@ -4,7 +4,7 @@ package com.github.bennyOe.gdxNormalLight.lwjgl3
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
-import com.github.bennyOe.gdxNormalLight.GgdxNormalMapExample
+import com.github.bennyOe.gdxNormalLight.demo.GgdxNormalMapExample
 
 /** Launches the desktop (LWJGL3) application. */
 fun main() {

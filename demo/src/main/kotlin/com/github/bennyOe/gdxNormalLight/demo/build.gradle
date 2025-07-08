@@ -1,0 +1,15 @@
+plugins {
+  application
+  kotlin("jvm") version "1.9.10" // oder passend zu deinem Projekt
+}
+
+dependencies {
+  implementation(project(":core"))
+  implementation(project(":lwjgl3")) // falls du das LWJGL backend direkt brauchst
+
+  // Weitere Abhängigkeiten, falls nötig
+}
+
+application {
+  mainClass.set("com.github.bennyOe.gdxNormalLight.GgdxNormalMapExampleKt")
+}

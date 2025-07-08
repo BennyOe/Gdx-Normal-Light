@@ -43,7 +43,6 @@ import ktx.math.vec2
  * @author Benjamin Oechsle
  */
 class LightDemo : AbstractLightDemo() {
-
     // --- Constants for tweaking controls ---
     companion object {
         private const val LIGHT_INTENSITY_SPEED = 2.5f
@@ -76,51 +75,61 @@ class LightDemo : AbstractLightDemo() {
         lightEngine = LightEngine(rayHandler, cam, batch, viewport)
 
         // Set up a simple input processor to listen for mouse scroll events.
-        Gdx.input.inputProcessor = object : InputAdapter() {
-            override fun scrolled(amountX: Float, amountY: Float): Boolean {
-                yScrollAmount = amountY
-                return true
+        Gdx.input.inputProcessor =
+            object : InputAdapter() {
+                override fun scrolled(
+                    amountX: Float,
+                    amountY: Float,
+                ): Boolean {
+                    yScrollAmount = amountY
+                    return true
+                }
             }
-        }
 
         // --- Light Creation ---
-        directionalLight = lightEngine.addDirectionalLight(
-            color = Color(0.8f, 0.8f, 1f, 0.45f),
-            direction = -45f,
-            initialIntensity = 2.8f,
-            elevation = 40f,
-        )
+        directionalLight =
+            lightEngine.addDirectionalLight(
+                color = Color(0.8f, 0.8f, 1f, 0.45f),
+                direction = -45f,
+                initialIntensity = 2.8f,
+                elevation = 40f,
+            )
 
-        pointLight = lightEngine.addPointLight(
-            position = vec2(6f, 6f),
-            color = Color(1f, 0.5f, 0.2f, 1f),
-            initialIntensity = 2f,
-            b2dDistance = 7f,
-            falloffProfile = 1f,
-            shaderIntensityMultiplier = 1f,
-        )
+        pointLight =
+            lightEngine.addPointLight(
+                position = vec2(6f, 6f),
+                color = Color(1f, 0.5f, 0.2f, 1f),
+                initialIntensity = 2f,
+                b2dDistance = 7f,
+                falloffProfile = 1f,
+                shaderIntensityMultiplier = 1f,
+            )
 
-        spotLight = lightEngine.addSpotLight(
-            position = vec2(6f, 5f),
-            color = Color(0.2f, 0.5f, 1f, 1f),
-            direction = 0f,
-            coneDegree = 75f,
-            initialIntensity = 4f,
-            b2dDistance = 10f,
-            falloffProfile = 0.5f,
-            shaderIntensityMultiplier = 2f,
-        )
+        spotLight =
+            lightEngine.addSpotLight(
+                position = vec2(6f, 5f),
+                color = Color(0.2f, 0.5f, 1f, 1f),
+                direction = 0f,
+                coneDegree = 75f,
+                initialIntensity = 4f,
+                b2dDistance = 10f,
+                falloffProfile = 0.5f,
+                shaderIntensityMultiplier = 2f,
+            )
 
         // --- Initial Scene Setup ---
         lightEngine.removeLight(spotLight) // Start with the spotlight disabled
-        activeLight = pointLight          // Point light is active by default
+        activeLight = pointLight // Point light is active by default
 
         lightEngine.setNormalInfluence(1f)
         lightEngine.setSpecularRemap(0.3f, 0.7f)
         lightEngine.setSpecularIntensity(specularIntensity)
     }
 
-    override fun resize(width: Int, height: Int) {
+    override fun resize(
+        width: Int,
+        height: Int,
+    ) {
         lightEngine.resize(width, height)
     }
 
@@ -139,10 +148,9 @@ class LightDemo : AbstractLightDemo() {
         lightEngine.renderLights { engine ->
             // optional textures to toggle
 
-             engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
-             engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
+            engine.draw(wall, wallNormals, 0f, 0f, 9f, 19f)
+            engine.draw(wood, woodNormals, 9f, 0f, 9f, 19f)
 //            engine.draw(plank, plankNormals, plankSpecular, 0f, 0f, 19f, 19f)
-
         }
         // Render Box2D debug lines
         debugRenderer.render(world, cam.combined)

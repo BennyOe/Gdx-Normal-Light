@@ -35,7 +35,7 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
   implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-  implementation project(':core')
+  implementation project(':demo')
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"
@@ -56,7 +56,7 @@ run {
 
 jar {
 // sets the name of the .jar file this produces to the name of the game or app, with the version after.
-  archiveFileName.set("${appName}-${projectVersion}.jar")
+  archiveFileName.set("${appName}-${project.version}.jar")
 // the duplicatesStrategy matters starting in Gradle 7.0; this setting works.
   duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
   dependsOn configurations.runtimeClasspath
@@ -81,7 +81,7 @@ jar {
 tasks.register("jarMac") {
   dependsOn("jar")
   group("build")
-  jar.archiveFileName.set("${appName}-${projectVersion}-mac.jar")
+  jar.archiveFileName.set("${appName}-${project.version}-mac.jar")
   jar.exclude("windows/x86/**", "windows/x64/**", "linux/arm32/**", "linux/arm64/**", "linux/x64/**", "**/*.dll", "**/*.so",
     'META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
   dependencies {
@@ -95,7 +95,7 @@ tasks.register("jarMac") {
 tasks.register("jarLinux") {
   dependsOn("jar")
   group("build")
-  jar.archiveFileName.set("${appName}-${projectVersion}-linux.jar")
+  jar.archiveFileName.set("${appName}-${project.version}-linux.jar")
   jar.exclude("windows/x86/**", "windows/x64/**", "macos/arm64/**", "macos/x64/**", "**/*.dll", "**/*.dylib",
     'META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
   dependencies {
@@ -109,7 +109,7 @@ tasks.register("jarLinux") {
 tasks.register("jarWin") {
   dependsOn("jar")
   group("build")
-  jar.archiveFileName.set("${appName}-${projectVersion}-win.jar")
+  jar.archiveFileName.set("${appName}-${project.version}-win.jar")
   jar.exclude("macos/arm64/**", "macos/x64/**", "linux/arm32/**", "linux/arm64/**", "linux/x64/**", "**/*.dylib", "**/*.so",
     'META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
   dependencies {
@@ -124,7 +124,7 @@ construo {
     // human-readable name, used for example in the `.app` name for macOS
     humanName.set(appName)
     // Optional, defaults to project version property
-    version.set("$projectVersion")
+    version.set("$project.version")
 
     targets.configure {
       create("linuxX64", Target.Linux) {

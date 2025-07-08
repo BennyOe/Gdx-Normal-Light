@@ -12,6 +12,7 @@ interface IGameLight {
 sealed class GameLight(
     open val shaderLight: ShaderLight,
     open var b2dLight: Light,
+    open var isManaged: Boolean = true,
     internal val baseIntensity: Float = shaderLight.intensity,
     internal val baseColor: Color = shaderLight.color,
     internal val baseDistance: Float = b2dLight.distance,
@@ -55,6 +56,7 @@ sealed class GameLight(
     data class Directional(
         override val shaderLight: ShaderLight.Directional,
         override var b2dLight: Light,
+        override var isManaged: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
         var intensity: Float
             get() = shaderLight.intensity
@@ -80,6 +82,7 @@ sealed class GameLight(
         override val shaderLight: ShaderLight.Point,
         override var b2dLight: Light,
         var shaderIntensityMultiplier: Float = 1.0f,
+        override var isManaged: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = b2dLight.position
@@ -115,6 +118,7 @@ sealed class GameLight(
         override val shaderLight: ShaderLight.Spot,
         override var b2dLight: Light,
         var shaderIntensityMultiplier: Float = 1.0f,
+        override var isManaged: Boolean = true,
     ) : GameLight(shaderLight, b2dLight) {
         var position: Vector2
             get() = b2dLight.position

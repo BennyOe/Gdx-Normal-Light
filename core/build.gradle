@@ -1,47 +1,97 @@
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-eclipse.project.name = appName + '-core'
+plugins {
+  id 'java-library'
+  id 'org.jetbrains.kotlin.jvm'
+  id 'maven-publish'
+  id 'signing'
+}
+
+// Loads versions from gradle.properties
+def gdxVersion = project.properties['gdxVersion']
+def box2dlightsVersion = project.properties['box2dlightsVersion']
+def ktxVersion = project.properties['ktxVersion']
+
+sourceSets {
+  main {
+    kotlin {
+      srcDirs = ['src/main/kotlin']
+      exclude 'com/github/bennyOe/gdxNormalLight/demo/**',
+              'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
+    }
+    resources {
+      srcDirs = ["src/main/resources", "${project.rootDir}/assets"]
+      include "shader/**"
+    }
+    java.srcDirs += kotlin.srcDirs
+  }
+}
+
+tasks.jar {
+    dependsOn classes
+    dependsOn processResources
+    from sourceSets.main.output.classesDirs
+    from sourceSets.main.output.resourcesDir
+    exclude 'com/github/bennyOe/gdxNormalLight/demo/**'
+    exclude 'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
+}
 
 dependencies {
-  api "com.badlogicgames.ashley:ashley:$ashleyVersion"
-  api "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion"
-  api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
-  api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-  api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
-  api "com.crashinvaders.vfx:gdx-vfx-core:$gdxVfxCoreVersion"
-  api "com.crashinvaders.vfx:gdx-vfx-effects:$gdxVfxEffectsVersion"
-  api "com.github.aliasifk:HackLights:$hackLightsVersion"
-  api "com.kotcrab.vis:vis-ui:$visUiVersion"
-  api "io.github.libktx:ktx-actors:$ktxVersion"
-  api "io.github.libktx:ktx-ai:$ktxVersion"
+  api "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion"
   api "io.github.libktx:ktx-app:$ktxVersion"
-  api "io.github.libktx:ktx-artemis:$ktxVersion"
-  api "io.github.libktx:ktx-ashley:$ktxVersion"
-  api "io.github.libktx:ktx-assets-async:$ktxVersion"
   api "io.github.libktx:ktx-assets:$ktxVersion"
-  api "io.github.libktx:ktx-async:$ktxVersion"
-  api "io.github.libktx:ktx-box2d:$ktxVersion"
-  api "io.github.libktx:ktx-collections:$ktxVersion"
-  api "io.github.libktx:ktx-freetype-async:$ktxVersion"
-  api "io.github.libktx:ktx-freetype:$ktxVersion"
-  api "io.github.libktx:ktx-graphics:$ktxVersion"
-  api "io.github.libktx:ktx-i18n:$ktxVersion"
-  api "io.github.libktx:ktx-inject:$ktxVersion"
-  api "io.github.libktx:ktx-json:$ktxVersion"
-  api "io.github.libktx:ktx-log:$ktxVersion"
   api "io.github.libktx:ktx-math:$ktxVersion"
-  api "io.github.libktx:ktx-preferences:$ktxVersion"
-  api "io.github.libktx:ktx-reflect:$ktxVersion"
-  api "io.github.libktx:ktx-scene2d:$ktxVersion"
-  api "io.github.libktx:ktx-style:$ktxVersion"
-  api "io.github.libktx:ktx-tiled:$ktxVersion"
-  api "io.github.libktx:ktx-vis-style:$ktxVersion"
-  api "io.github.libktx:ktx-vis:$ktxVersion"
-  api "net.onedaybeard.artemis:artemis-odb:$artemisOdbVersion"
-  api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-  api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"
+  api "io.github.libktx:ktx-async:$ktxVersion"
+}
 
-  if(enableGraalNative == 'true') {
-    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+// This task creates a JAR containing the source code.
+tasks.register('sourcesJar', Jar) {
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      groupId = 'io.github.bennyoe'
+      artifactId = 'gdx-normal-light'
+
+      artifact jar
+      artifact sourcesJar
+
+
+      pom {
+        name = 'GDX Normal Light'
+        description = 'A 2D Normal Mapping & Light engine for LibGDX.'
+        url = 'https://github.com/bennyOe/gdx-normal-light'
+        licenses {
+          license {
+            name = 'The MIT License'
+            url = 'https://opensource.org/licenses/MIT'
+          }
+        }
+        developers {
+          developer {
+            id = 'bennyOe'
+            name = 'Benjamin Oechsle'
+            email = 'b.oechsle@proton.me'
+          }
+        }
+        scm {
+          connection = 'scm:git:git://github.com/bennyOe/gdx-normal-light.git'
+          developerConnection = 'scm:git:ssh://github.com:bennyOe/gdx-normal-light.git'
+          url = 'https://github.com/bennyOe/gdx-normal-light'
+        }
+      }
+    }
   }
+}
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
+
+    def signingPassword = project.findProperty("signing.password")
+    if (signingPassword) {
+        password = signingPassword
+    }
 }

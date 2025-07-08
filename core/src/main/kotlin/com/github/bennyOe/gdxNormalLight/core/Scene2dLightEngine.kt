@@ -1,4 +1,4 @@
-package io.bennyoe.lightEngine.core
+package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
 import com.badlogic.gdx.Gdx
@@ -9,8 +9,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.viewport.Viewport
-import com.github.bennyOe.gdxNormalLight.core.AbstractLightEngine
 import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
+import ktx.math.vec2
 
 /**
  * A specialized light engine for Scene2D applications, combining normal mapping shaders with Box2D shadow rendering.
@@ -30,6 +30,7 @@ import com.github.bennyOe.gdxNormalLight.scene2d.NormalMappedActor
  * @param maxShaderLights Maximum number of shader-based lights supported by the engine.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
  * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ * @param lightActivationRadius The maximum distance from the center within which lights are activated. Use -1 to disable the radius limit.
  */
 class Scene2dLightEngine(
     rayHandler: RayHandler,
@@ -41,7 +42,18 @@ class Scene2dLightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
+    lightActivationRadius: Float = -1f,
+) : AbstractLightEngine(
+        rayHandler,
+        cam,
+        batch,
+        viewport,
+        useDiffuseLight,
+        maxShaderLights,
+        entityCategory,
+        entityMask,
+        lightActivationRadius,
+    ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -59,11 +71,19 @@ class Scene2dLightEngine(
      * - **Diffuse texture must be bound to texture unit 0** before calling `batch.draw(...)`.
      * - Use the batch normally for rendering your sprites — lighting will be automatically applied by the shader.
      *
+     * @param center The [Actor] used as the center point for light culling and focus (usually the camera or player).
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(drawScene: (Scene2dLightEngine) -> Unit) {
+    fun renderLights(
+        center: Actor = Actor(),
+        drawScene: (Scene2dLightEngine) -> Unit,
+    ) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
+
+        val centerX = center.x + center.width * 0.5f
+        val centerY = center.y + center.height * 0.5f
+        updateActiveLights(vec2(centerX, centerY))
 
         setShaderToEngineShader()
         applyShaderUniforms()

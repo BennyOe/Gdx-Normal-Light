@@ -4,7 +4,9 @@ import box2dLight.RayHandler
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.Viewport
+import ktx.math.vec2
 
 /**
  * A lighting engine that integrates normal mapping and Box2D-based shadow rendering into a 2D scene.
@@ -24,6 +26,7 @@ import com.badlogic.gdx.utils.viewport.Viewport
  * @param maxShaderLights Maximum number of shader-based lights supported.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
  * @param entityMask Optional: Bitmask defining the collision mask for lights created through this engine.
+ * @param lightActivationRadius The maximum distance from the center within which lights are activated. Use -1 to disable the radius limit.
  */
 class LightEngine(
     rayHandler: RayHandler,
@@ -34,7 +37,18 @@ class LightEngine(
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
-) : AbstractLightEngine(rayHandler, cam, batch, viewport, useDiffuseLight, maxShaderLights, entityCategory, entityMask) {
+    lightActivationRadius: Float = -1f,
+) : AbstractLightEngine(
+        rayHandler,
+        cam,
+        batch,
+        viewport,
+        useDiffuseLight,
+        maxShaderLights,
+        entityCategory,
+        entityMask,
+        lightActivationRadius,
+    ) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -52,12 +66,17 @@ class LightEngine(
      * - **Diffuse texture must be bound to texture unit 0** before calling `batch.draw(...)`.
      * - Use the batch normally for rendering your sprites — lighting will be automatically applied by the shader.
      *
+     * @param center The world position around which lights are prioritized and updated.
      * @param drawScene Lambda in which your game scene should be rendered with lighting applied.
      */
-    fun renderLights(drawScene: (LightEngine) -> Unit) {
+    fun renderLights(
+        center: Vector2 = vec2(0f, 0f),
+        drawScene: (LightEngine) -> Unit,
+    ) {
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
+        updateActiveLights(center)
         setShaderToEngineShader()
         applyShaderUniforms()
 
@@ -157,7 +176,6 @@ class LightEngine(
         shader.setUniformi("u_useSpecularMap", 0)
         shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
-
         normals.bind(1)
         diffuse.bind(0)
         if (flipX) {
@@ -201,7 +219,6 @@ class LightEngine(
         shader.setUniformi("u_useNormalMap", 0)
         shader.setUniformi("u_useSpecularMap", 0)
         shader.setUniformi("u_flipX", if (flipX) 1 else 0)
-
 
         diffuse.bind(0)
         if (flipX) {

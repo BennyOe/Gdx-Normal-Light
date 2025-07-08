@@ -1,11 +1,11 @@
-package com.github.bennyOe.gdxNormalLight
+package com.github.bennyOe.gdxNormalLight.demo
 
-import com.github.bennyOe.gdxNormalLight.demo.LightDemo
+import com.badlogic.gdx.ApplicationListener
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 
-class GgdxNormalMapExample : KtxGame<KtxScreen>() {
+class GgdxNormalMapExample : KtxGame<KtxScreen>(), ApplicationListener {
     override fun create() {
         KtxAsync.initiate()
 
@@ -13,6 +13,3 @@ class GgdxNormalMapExample : KtxGame<KtxScreen>() {
         setScreen<LightDemo>()
     }
 }
-
-
-

@@ -63,9 +63,8 @@ publishing {
       artifact jar
       artifact sourcesJar
 
-
       pom {
-        name = 'GDX Normal Light'
+        name = 'gdx-normal-light'
         description = 'A 2D Normal Mapping & Light engine for LibGDX.'
         url = 'https://github.com/bennyOe/gdx-normal-light'
         licenses {
@@ -94,9 +93,4 @@ publishing {
 signing {
     useGpgCmd()
     sign publishing.publications.mavenJava
-
-    def signingPassword = project.findProperty("signing.password")
-    if (signingPassword) {
-        password = signingPassword
-    }
 }

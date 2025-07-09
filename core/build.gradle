@@ -3,6 +3,7 @@ plugins {
   id 'org.jetbrains.kotlin.jvm'
   id 'maven-publish'
   id 'signing'
+  id ("org.danilopianini.publish-on-central") version "9.0.7"
 }
 
 // Loads versions from gradle.properties
@@ -34,6 +35,16 @@ tasks.jar {
     exclude 'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
 }
 
+publishOnCentral {
+  repoOwner.set("bennyOe")
+  projectDescription.set("A 2D Normal Mapping & Light engine for LibGDX.")
+  projectLongName.set(project.name)
+  licenseName.set("Apache License, Version 2.0")
+  licenseUrl.set("http://www.apache.org/licenses/LICENSE-2.0")
+  projectUrl.set("https://github.com/${repoOwner.get()}/${project.name}")
+  scmConnection.set("scm:git:https://github.com/${repoOwner.get()}/${project.name}")
+}
+
 dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion"
@@ -41,12 +52,6 @@ dependencies {
   api "io.github.libktx:ktx-assets:$ktxVersion"
   api "io.github.libktx:ktx-math:$ktxVersion"
   api "io.github.libktx:ktx-async:$ktxVersion"
-}
-
-// This task creates a JAR containing the source code.
-tasks.register('sourcesJar', Jar) {
-  archiveClassifier.set('sources')
-  from sourceSets.main.allSource
 }
 
 publishing {
@@ -65,8 +70,8 @@ publishing {
         url = 'https://github.com/bennyOe/gdx-normal-light'
         licenses {
           license {
-            name = 'The MIT License'
-            url = 'https://opensource.org/licenses/MIT'
+            name = 'Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0'
           }
         }
         developers {

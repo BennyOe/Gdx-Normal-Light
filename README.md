@@ -56,6 +56,15 @@ A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighti
 
 ## ⚙️ Engine Setup & Usage
 
+### Gradle Setup
+
+```kotlin
+// In core/build.gradle.kts
+dependencies {
+    implementation("io.github.bennyoe:gdx-normal-light:1.0.1")
+}
+```
+
 ### Low-Level API (`LightEngine`)
 
 #### Initialization
@@ -195,17 +204,6 @@ Then execute:
 - **Physics**: Box2D
 - **Lighting**: box2dlights
 - **Optional**: LibKTX (for demos)
-
-### Gradle Setup
-
-```kotlin
-// In core/build.gradle.kts
-dependencies {
-    implementation("io.github.bennyoe:gdx-normal-light:1.0.1")
-}
-```
-
-Make sure the shaders `light.vert` and `light.frag` are in `assets/shader`.
 
 ---
 

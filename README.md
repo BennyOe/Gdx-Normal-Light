@@ -201,7 +201,7 @@ Then execute:
 ```kotlin
 // In core/build.gradle.kts
 dependencies {
-    implementation("com.github.YourUsername:gdx-2d-light:VERSION")
+    implementation("io.github.bennyoe:gdx-normal-light:1.0.1")
 }
 ```
 

@@ -19,7 +19,7 @@ def gdxVersion = project.properties['gdxVersion']
 def ktxVersion = project.properties['ktxVersion']
 
 dependencies {
-    implementation project(':core')
+    implementation project(':gdx-normal-light')
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     implementation "io.github.libktx:ktx-app:$ktxVersion"
     implementation "io.github.libktx:ktx-assets:$ktxVersion"

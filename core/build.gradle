@@ -1,9 +1,8 @@
 plugins {
   id 'java-library'
   id 'org.jetbrains.kotlin.jvm'
-  id 'maven-publish'
   id 'signing'
-  id ("org.danilopianini.publish-on-central") version "9.0.7"
+  id("org.danilopianini.publish-on-central") version "9.0.7"
 }
 
 // Loads versions from gradle.properties
@@ -16,7 +15,7 @@ sourceSets {
     kotlin {
       srcDirs = ['src/main/kotlin']
       exclude 'com/github/bennyOe/gdxNormalLight/demo/**',
-              'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
+        'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
     }
     resources {
       srcDirs = ["src/main/resources", "${project.rootDir}/assets"]
@@ -27,12 +26,12 @@ sourceSets {
 }
 
 tasks.jar {
-    dependsOn classes
-    dependsOn processResources
-    from sourceSets.main.output.classesDirs
-    from sourceSets.main.output.resourcesDir
-    exclude 'com/github/bennyOe/gdxNormalLight/demo/**'
-    exclude 'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
+  dependsOn classes
+  dependsOn processResources
+  from sourceSets.main.output.classesDirs
+  from sourceSets.main.output.resourcesDir
+  exclude 'com/github/bennyOe/gdxNormalLight/demo/**'
+  exclude 'com/github/bennyOe/gdxNormalLight/GgdxNormalMapExample.kt'
 }
 
 publishOnCentral {
@@ -56,12 +55,13 @@ dependencies {
 
 publishing {
   publications {
-    mavenJava(MavenPublication) {
+    mavenKotlin(MavenPublication) {
       groupId = 'io.github.bennyoe'
       artifactId = 'gdx-normal-light'
 
       artifact jar
       artifact sourcesJar
+      artifact javadocJar
 
       pom {
         name = 'gdx-normal-light'
@@ -75,9 +75,10 @@ publishing {
         }
         developers {
           developer {
-            id = 'bennyOe'
             name = 'Benjamin Oechsle'
             email = 'b.oechsle@proton.me'
+            organization = 'none'
+            organizationUrl = 'https://github.com/bennyOe'
           }
         }
         scm {
@@ -92,5 +93,5 @@ publishing {
 
 signing {
     useGpgCmd()
-    sign publishing.publications.mavenJava
+    sign publishing.publications.mavenKotlin
 }

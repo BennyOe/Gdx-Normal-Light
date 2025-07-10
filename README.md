@@ -2,6 +2,15 @@
 
 A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighting, **normal mapping**, and **Box2D shadows**. Supports both `scene2d` and ECS-based architectures like Fleks, with a focus on flexibility and real-time performance.
 
+### 🔸 Point Light Effect
+
+![Point Light Demo](https://github.com/user-attachments/assets/d5b5b969-47a9-4c21-84cd-7a42be94af94)
+
+
+### 🔸 Spot Light Effect
+
+![Spot Light Demo](https://github.com/user-attachments/assets/db9a0057-a742-4b1e-8826-a9ad9786d7e1)
+
 ## ✨ Features
 
 - **Dynamic Per-Pixel Lighting**  
@@ -40,18 +49,6 @@ A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighti
   - `LightEngine`: Low-level, ECS-compatible engine.  
   - `Scene2dLightEngine`: High-level, plug-and-play engine for scene2d users.
  
-## 🎮 Demo
-
-### 🔸 Point Light Effect  
-
-![Point Light Demo](https://github.com/user-attachments/assets/d5b5b969-47a9-4c21-84cd-7a42be94af94)
-
----
-
-### 🔸 Spot Light Effect  
-
-![Spot Light Demo](https://github.com/user-attachments/assets/db9a0057-a742-4b1e-8826-a9ad9786d7e1)
-
 ---
 
 ## ⚙️ Engine Setup & Usage

@@ -55,10 +55,21 @@ A powerful 2D lighting engine for **LibGDX**, combining dynamic per-pixel lighti
 
 ### Gradle Setup
 
+#### For Kotlin (libKtx) Projects
 ```kotlin
 // In core/build.gradle.kts
 dependencies {
     implementation("io.github.bennyoe:gdx-normal-light:1.0.1")
+}
+```
+
+#### For Java Projects
+```kotlin
+// The following dependencies are required only for pure Java LibGDX projects (not Kotlin):
+dependencies {
+    implementation("io.github.bennyoe:gdx-normal-light:1.0.1")
+    api("io.github.libktx:ktx-math:$ktxVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
 }
 ```
 

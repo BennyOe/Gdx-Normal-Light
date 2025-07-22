@@ -47,16 +47,16 @@ class Scene2dLightEngine(
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-    rayHandler,
-    cam,
-    batch,
-    viewport,
-    useDiffuseLight,
-    maxShaderLights,
-    entityCategory,
-    entityMask,
-    lightActivationRadius,
-) {
+        rayHandler,
+        cam,
+        batch,
+        viewport,
+        useDiffuseLight,
+        maxShaderLights,
+        entityCategory,
+        entityMask,
+        lightActivationRadius,
+    ) {
     private val lightCam = OrthographicCamera()
 
     /**
@@ -90,9 +90,11 @@ class Scene2dLightEngine(
         val centerY = center.y + center.height * .5f
         updateActiveLights(vec2(centerX, centerY))
 
-        setShaderToEngineShader(); applyShaderUniforms()
+        setShaderToEngineShader()
+        applyShaderUniforms()
         batch.begin()
-        lastNormalMap = null; lastSpecularMap = null
+        lastNormalMap = null
+        lastSpecularMap = null
         drawScene(this)
         batch.end()
         setShaderToDefaultShader()
@@ -114,7 +116,8 @@ class Scene2dLightEngine(
 
         rayHandler.setCombinedMatrix(
             lightCam.combined,
-            snappedWorldX, snappedWorldY,
+            snappedWorldX,
+            snappedWorldY,
             viewport.worldWidth * lightViewportScale,
             viewport.worldHeight * lightViewportScale,
         )

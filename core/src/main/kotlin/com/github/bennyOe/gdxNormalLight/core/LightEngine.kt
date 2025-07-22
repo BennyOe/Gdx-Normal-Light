@@ -1,12 +1,14 @@
 package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.Viewport
 import ktx.math.vec2
+import kotlin.math.floor
 
 /**
  * A lighting engine that integrates normal mapping and Box2D-based shadow rendering into a 2D scene.
@@ -22,6 +24,7 @@ import ktx.math.vec2
  * @param cam The camera used to render the scene.
  * @param batch The SpriteBatch used for rendering the scene with lighting.
  * @param viewport The Viewport used to configure the screen projection.
+ * @param lightViewportScale Multiplier for how much wider/taller the shadow pass covers compared to the visible viewport. Typical values: 1–4.
  * @param useDiffuseLight Whether to apply diffuse lighting calculation in the shader.
  * @param maxShaderLights Maximum number of shader-based lights supported.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
@@ -33,22 +36,23 @@ class LightEngine(
     cam: OrthographicCamera,
     batch: SpriteBatch,
     viewport: Viewport,
+    private val lightViewportScale: Float = 2f,
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-        rayHandler,
-        cam,
-        batch,
-        viewport,
-        useDiffuseLight,
-        maxShaderLights,
-        entityCategory,
-        entityMask,
-        lightActivationRadius,
-    ) {
+    rayHandler,
+    cam,
+    batch,
+    viewport,
+    useDiffuseLight,
+    maxShaderLights,
+    entityCategory,
+    entityMask,
+    lightActivationRadius,
+) {
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -77,163 +81,180 @@ class LightEngine(
         viewport.apply()
 
         updateActiveLights(center)
-        setShaderToEngineShader()
-        applyShaderUniforms()
+        setShaderToEngineShader(); applyShaderUniforms()
 
         batch.begin()
-        lastNormalMap = null
-        lastSpecularMap = null
+        lastNormalMap = null; lastSpecularMap = null
         drawScene(this)
         batch.end()
-
         setShaderToDefaultShader()
 
-        rayHandler.setCombinedMatrix(cam)
+        val backBufferScale = Gdx.graphics.backBufferScale
+        val worldUnitsPerPixelX =
+            (cam.viewportWidth * cam.zoom * lightViewportScale) /
+                (viewport.screenWidth * backBufferScale)
+        val worldUnitsPerPixelY =
+            (cam.viewportHeight * cam.zoom * lightViewportScale) /
+                (viewport.screenHeight * backBufferScale)
+
+        // ----- 3. Kamera auf Raster einschnappen -----
+        val snappedWorldX = floor(cam.position.x / worldUnitsPerPixelX) * worldUnitsPerPixelX
+        val snappedWorldY = floor(cam.position.y / worldUnitsPerPixelY) * worldUnitsPerPixelY
+        cam.position.set(snappedWorldX, snappedWorldY, 0f)
+        cam.update()
+
+        // ----- 4. Shadow-Pass rendern -----
+        rayHandler.setCombinedMatrix(
+            cam.combined,
+            snappedWorldX, snappedWorldY,
+            viewport.worldWidth * lightViewportScale,
+            viewport.worldHeight * lightViewportScale,
+        )
         rayHandler.updateAndRender()
     }
 
-    /**
-     * Draws a textured quad with a diffuse, a normal and a specular map, binding them to the correct texture units.
-     *
-     * This method binds the provided diffuse texture to texture unit 0, the normal map to texture unit 1 and the specular map to texture unit 2,
-     * ensuring they are properly used by the lighting shader. It should only be called within the [renderLights] lambda.
-     *
-     * If the normal map or specular map differs from the previously used one, the batch is flushed to prevent texture conflicts.
-     *
-     * @param diffuse The diffuse texture (base color).
-     * @param normals The corresponding normal map texture.
-     * @param specular The corresponding specular map texture.
-     * @param x The x-position in world coordinates.
-     * @param y The y-position in world coordinates.
-     * @param width The width of the quad to draw.
-     * @param height The height of the quad to draw.
-     * @param flipX If true, the sprite is drawn mirrored on the X axis.
-     */
-    fun draw(
-        diffuse: Texture,
-        normals: Texture,
-        specular: Texture,
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        flipX: Boolean = false,
-    ) {
-        if (lastNormalMap == null || normals != lastNormalMap) {
-            batch.flush()
-        }
-        shader.bind()
-        shader.setUniformi("u_useNormalMap", 1)
-        shader.setUniformi("u_useSpecularMap", 1)
-        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+/**
+ * Draws a textured quad with a diffuse, a normal and a specular map, binding them to the correct texture units.
+ *
+ * This method binds the provided diffuse texture to texture unit 0, the normal map to texture unit 1 and the specular map to texture unit 2,
+ * ensuring they are properly used by the lighting shader. It should only be called within the [renderLights] lambda.
+ *
+ * If the normal map or specular map differs from the previously used one, the batch is flushed to prevent texture conflicts.
+ *
+ * @param diffuse The diffuse texture (base color).
+ * @param normals The corresponding normal map texture.
+ * @param specular The corresponding specular map texture.
+ * @param x The x-position in world coordinates.
+ * @param y The y-position in world coordinates.
+ * @param width The width of the quad to draw.
+ * @param height The height of the quad to draw.
+ * @param flipX If true, the sprite is drawn mirrored on the X axis.
+ */
+fun draw(
+    diffuse: Texture,
+    normals: Texture,
+    specular: Texture,
+    x: Float,
+    y: Float,
+    width: Float,
+    height: Float,
+    flipX: Boolean = false,
+) {
+    if (lastNormalMap == null || normals != lastNormalMap) {
+        batch.flush()
+    }
+    shader.bind()
+    shader.setUniformi("u_useNormalMap", 1)
+    shader.setUniformi("u_useSpecularMap", 1)
+    shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
-        if (lastSpecularMap == null || specular != lastSpecularMap) {
-            batch.flush()
-        }
-
-        normals.bind(1)
-        specular.bind(2)
-        diffuse.bind(0)
-        if (flipX) {
-            batch.draw(diffuse, x + width, y, -width, height)
-        } else {
-            batch.draw(diffuse, x, y, width, height)
-        }
-        lastNormalMap = normals
-        lastSpecularMap = specular
+    if (lastSpecularMap == null || specular != lastSpecularMap) {
+        batch.flush()
     }
 
-    /**
-     * Draws a textured quad with a diffuse and normal map, binding them to the correct texture units.
-     *
-     * This method binds the provided diffuse texture to texture unit 0 and the normal map to texture unit 1,
-     * ensuring they are properly used by the lighting shader. It should only be called within the [renderLights] lambda.
-     *
-     * If the normal map differs from the previously used one, the batch is flushed to prevent texture conflicts.
-     *
-     * @param diffuse The diffuse texture (base color).
-     * @param normals The corresponding normal map texture.
-     * @param x The x-position in world coordinates.
-     * @param y The y-position in world coordinates.
-     * @param width The width of the quad to draw.
-     * @param height The height of the quad to draw.
-     * @param flipX If true, the sprite is drawn mirrored on the X axis.
-     */
-    fun draw(
-        diffuse: Texture,
-        normals: Texture,
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        flipX: Boolean = false,
-    ) {
-        if (lastNormalMap == null || normals != lastNormalMap) {
-            batch.flush()
-        }
-        shader.bind()
-        shader.setUniformi("u_useNormalMap", 1)
-        shader.setUniformi("u_useSpecularMap", 0)
-        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+    normals.bind(1)
+    specular.bind(2)
+    diffuse.bind(0)
+    if (flipX) {
+        batch.draw(diffuse, x + width, y, -width, height)
+    } else {
+        batch.draw(diffuse, x, y, width, height)
+    }
+    lastNormalMap = normals
+    lastSpecularMap = specular
+}
 
-        normals.bind(1)
-        diffuse.bind(0)
-        if (flipX) {
-            batch.draw(diffuse, x + width, y, -width, height)
-        } else {
-            batch.draw(diffuse, x, y, width, height)
-        }
-        lastNormalMap = normals
-        lastSpecularMap = null
+/**
+ * Draws a textured quad with a diffuse and normal map, binding them to the correct texture units.
+ *
+ * This method binds the provided diffuse texture to texture unit 0 and the normal map to texture unit 1,
+ * ensuring they are properly used by the lighting shader. It should only be called within the [renderLights] lambda.
+ *
+ * If the normal map differs from the previously used one, the batch is flushed to prevent texture conflicts.
+ *
+ * @param diffuse The diffuse texture (base color).
+ * @param normals The corresponding normal map texture.
+ * @param x The x-position in world coordinates.
+ * @param y The y-position in world coordinates.
+ * @param width The width of the quad to draw.
+ * @param height The height of the quad to draw.
+ * @param flipX If true, the sprite is drawn mirrored on the X axis.
+ */
+fun draw(
+    diffuse: Texture,
+    normals: Texture,
+    x: Float,
+    y: Float,
+    width: Float,
+    height: Float,
+    flipX: Boolean = false,
+) {
+    if (lastNormalMap == null || normals != lastNormalMap) {
+        batch.flush()
+    }
+    shader.bind()
+    shader.setUniformi("u_useNormalMap", 1)
+    shader.setUniformi("u_useSpecularMap", 0)
+    shader.setUniformi("u_flipX", if (flipX) 1 else 0)
+
+    normals.bind(1)
+    diffuse.bind(0)
+    if (flipX) {
+        batch.draw(diffuse, x + width, y, -width, height)
+    } else {
+        batch.draw(diffuse, x, y, width, height)
+    }
+    lastNormalMap = normals
+    lastSpecularMap = null
+}
+
+/**
+ * Draws a textured quad using only a diffuse texture, without normal mapping.
+ *
+ * This method disables normal mapping by informing the shader to ignore the normal map.
+ * It is useful for objects that do not require dynamic lighting effects, such as UI elements,
+ * background layers, or sprites meant to remain unaffected by lighting.
+ *
+ * This function must also be called within the [renderLights] lambda to ensure the shader context is valid.
+ *
+ * @param diffuse The diffuse texture (base color).
+ * @param x The x-position in world coordinates.
+ * @param y The y-position in world coordinates.
+ * @param width The width of the quad to draw.
+ * @param height The height of the quad to draw.
+ * @param flipX If true, the sprite is drawn mirrored on the X axis.
+ */
+fun draw(
+    diffuse: Texture,
+    x: Float,
+    y: Float,
+    width: Float,
+    height: Float,
+    flipX: Boolean = false,
+) {
+    if (lastNormalMap != null) {
+        batch.flush()
     }
 
-    /**
-     * Draws a textured quad using only a diffuse texture, without normal mapping.
-     *
-     * This method disables normal mapping by informing the shader to ignore the normal map.
-     * It is useful for objects that do not require dynamic lighting effects, such as UI elements,
-     * background layers, or sprites meant to remain unaffected by lighting.
-     *
-     * This function must also be called within the [renderLights] lambda to ensure the shader context is valid.
-     *
-     * @param diffuse The diffuse texture (base color).
-     * @param x The x-position in world coordinates.
-     * @param y The y-position in world coordinates.
-     * @param width The width of the quad to draw.
-     * @param height The height of the quad to draw.
-     * @param flipX If true, the sprite is drawn mirrored on the X axis.
-     */
-    fun draw(
-        diffuse: Texture,
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        flipX: Boolean = false,
-    ) {
-        if (lastNormalMap != null) {
-            batch.flush()
-        }
+    shader.bind()
+    shader.setUniformi("u_useNormalMap", 0)
+    shader.setUniformi("u_useSpecularMap", 0)
+    shader.setUniformi("u_flipX", if (flipX) 1 else 0)
 
-        shader.bind()
-        shader.setUniformi("u_useNormalMap", 0)
-        shader.setUniformi("u_useSpecularMap", 0)
-        shader.setUniformi("u_flipX", if (flipX) 1 else 0)
-
-        diffuse.bind(0)
-        if (flipX) {
-            batch.draw(diffuse, x + width, y, -width, height)
-        } else {
-            batch.draw(diffuse, x, y, width, height)
-        }
-        lastNormalMap = null
-        lastSpecularMap = null
+    diffuse.bind(0)
+    if (flipX) {
+        batch.draw(diffuse, x + width, y, -width, height)
+    } else {
+        batch.draw(diffuse, x, y, width, height)
     }
+    lastNormalMap = null
+    lastSpecularMap = null
+}
 
-    override fun resize(
-        width: Int,
-        height: Int,
-    ) {
-        super.resize(width, height)
-    }
+override fun resize(
+    width: Int,
+    height: Int,
+) {
+    super.resize(width, height)
+}
 }

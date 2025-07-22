@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.math.MathUtils.floor
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -26,6 +27,7 @@ import ktx.math.vec2
  * @param batch The SpriteBatch used to draw Scene2D actors and textures.
  * @param viewport The viewport used to project the stage and shadow rendering.
  * @param stage The Scene2D stage containing actors. May be null if rendering is handled manually.
+ * @param lightViewportScale Multiplier for how much wider/taller the shadow pass covers compared to the visible viewport. Typical values: 1–4.
  * @param useDiffuseLight Whether to apply diffuse light shading in the lighting shader.
  * @param maxShaderLights Maximum number of shader-based lights supported by the engine.
  * @param entityCategory Optional: Bitmask defining the category of lights created through this engine.
@@ -38,22 +40,25 @@ class Scene2dLightEngine(
     batch: SpriteBatch,
     viewport: Viewport,
     val stage: Stage?,
+    private val lightViewportScale: Float = 2f,
     useDiffuseLight: Boolean = true,
     maxShaderLights: Int = 32,
     entityCategory: Short = 0x0001,
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-        rayHandler,
-        cam,
-        batch,
-        viewport,
-        useDiffuseLight,
-        maxShaderLights,
-        entityCategory,
-        entityMask,
-        lightActivationRadius,
-    ) {
+    rayHandler,
+    cam,
+    batch,
+    viewport,
+    useDiffuseLight,
+    maxShaderLights,
+    entityCategory,
+    entityMask,
+    lightActivationRadius,
+) {
+    private val lightCam = OrthographicCamera()
+
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -81,22 +86,38 @@ class Scene2dLightEngine(
         batch.projectionMatrix = cam.combined
         viewport.apply()
 
-        val centerX = center.x + center.width * 0.5f
-        val centerY = center.y + center.height * 0.5f
+        val centerX = center.x + center.width * .5f
+        val centerY = center.y + center.height * .5f
         updateActiveLights(vec2(centerX, centerY))
 
-        setShaderToEngineShader()
-        applyShaderUniforms()
-
+        setShaderToEngineShader(); applyShaderUniforms()
         batch.begin()
-        lastNormalMap = null
-        lastSpecularMap = null
+        lastNormalMap = null; lastSpecularMap = null
         drawScene(this)
         batch.end()
-
         setShaderToDefaultShader()
 
-        rayHandler.setCombinedMatrix(cam)
+        lightCam.setToOrtho(false, viewport.worldWidth, viewport.worldHeight)
+
+        val scale = Gdx.graphics.backBufferScale
+
+        val worldUnitsPerPixelX =
+            (cam.viewportWidth * cam.zoom * lightViewportScale) / (viewport.screenWidth * scale)
+        val worldUnitsPerPixelY =
+            (cam.viewportHeight * cam.zoom * lightViewportScale) / (viewport.screenHeight * scale)
+
+        val snappedWorldX = floor(cam.position.x / worldUnitsPerPixelX) * worldUnitsPerPixelX
+        val snappedWorldY = floor(cam.position.y / worldUnitsPerPixelY) * worldUnitsPerPixelY
+        lightCam.position.set(snappedWorldX, snappedWorldY, 0f)
+        lightCam.zoom = cam.zoom
+        lightCam.update()
+
+        rayHandler.setCombinedMatrix(
+            lightCam.combined,
+            snappedWorldX, snappedWorldY,
+            viewport.worldWidth * lightViewportScale,
+            viewport.worldHeight * lightViewportScale,
+        )
         rayHandler.updateAndRender()
     }
 

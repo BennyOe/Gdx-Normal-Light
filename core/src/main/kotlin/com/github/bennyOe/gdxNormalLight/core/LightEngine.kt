@@ -1,14 +1,12 @@
 package com.github.bennyOe.gdxNormalLight.core
 
 import box2dLight.RayHandler
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.Viewport
 import ktx.math.vec2
-import kotlin.math.floor
 
 /**
  * A lighting engine that integrates normal mapping and Box2D-based shadow rendering into a 2D scene.
@@ -43,16 +41,18 @@ class LightEngine(
     entityMask: Short = -1,
     lightActivationRadius: Float = -1f,
 ) : AbstractLightEngine(
-        rayHandler,
-        cam,
-        batch,
-        viewport,
-        useDiffuseLight,
-        maxShaderLights,
-        entityCategory,
-        entityMask,
-        lightActivationRadius,
-    ) {
+    rayHandler,
+    cam,
+    batch,
+    viewport,
+    useDiffuseLight,
+    maxShaderLights,
+    entityCategory,
+    entityMask,
+    lightActivationRadius,
+) {
+    private val lightCam = OrthographicCamera()
+
     /**
      * Performs the complete lighting render pass using normal mapping and Box2D shadows.
      *
@@ -91,25 +91,16 @@ class LightEngine(
         batch.end()
         setShaderToDefaultShader()
 
-        val backBufferScale = Gdx.graphics.backBufferScale
-        val worldUnitsPerPixelX =
-            (cam.viewportWidth * cam.zoom * lightViewportScale) /
-                (viewport.screenWidth * backBufferScale)
-        val worldUnitsPerPixelY =
-            (cam.viewportHeight * cam.zoom * lightViewportScale) /
-                (viewport.screenHeight * backBufferScale)
+        lightCam.setToOrtho(false, viewport.worldWidth, viewport.worldHeight)
+        lightCam.position.set(cam.position)
+        lightCam.zoom = cam.zoom
+        lightCam.update()
 
-        // ----- 3. Kamera auf Raster einschnappen -----
-        val snappedWorldX = floor(cam.position.x / worldUnitsPerPixelX) * worldUnitsPerPixelX
-        val snappedWorldY = floor(cam.position.y / worldUnitsPerPixelY) * worldUnitsPerPixelY
-        cam.position.set(snappedWorldX, snappedWorldY, 0f)
-        cam.update()
 
-        // ----- 4. Shadow-Pass rendern -----
         rayHandler.setCombinedMatrix(
-            cam.combined,
-            snappedWorldX,
-            snappedWorldY,
+            lightCam.combined,
+            cam.position.x,
+            cam.position.y,
             viewport.worldWidth * lightViewportScale,
             viewport.worldHeight * lightViewportScale,
         )

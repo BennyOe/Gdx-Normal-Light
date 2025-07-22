@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
-import com.badlogic.gdx.math.MathUtils.floor
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -101,23 +100,14 @@ class Scene2dLightEngine(
 
         lightCam.setToOrtho(false, viewport.worldWidth, viewport.worldHeight)
 
-        val scale = Gdx.graphics.backBufferScale
-
-        val worldUnitsPerPixelX =
-            (cam.viewportWidth * cam.zoom * lightViewportScale) / (viewport.screenWidth * scale)
-        val worldUnitsPerPixelY =
-            (cam.viewportHeight * cam.zoom * lightViewportScale) / (viewport.screenHeight * scale)
-
-        val snappedWorldX = floor(cam.position.x / worldUnitsPerPixelX) * worldUnitsPerPixelX
-        val snappedWorldY = floor(cam.position.y / worldUnitsPerPixelY) * worldUnitsPerPixelY
-        lightCam.position.set(snappedWorldX, snappedWorldY, 0f)
+        lightCam.position.set(cam.position)
         lightCam.zoom = cam.zoom
         lightCam.update()
 
         rayHandler.setCombinedMatrix(
             lightCam.combined,
-            snappedWorldX,
-            snappedWorldY,
+            cam.position.x,
+            cam.position.y,
             viewport.worldWidth * lightViewportScale,
             viewport.worldHeight * lightViewportScale,
         )
